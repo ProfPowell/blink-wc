@@ -34,14 +34,23 @@ const LETTER_MODES = [
   'glitch',
   'cascade',
   'typewriter',
+  'zoom',
+  'flip3d',
+  'swing',
+  'shake',
+  'heartbeat',
+  'decode',
 ];
 
 // Modes driven by the multi-step engine: JS advances data-step="0..N-1" across
 // the cycle and CSS styles each step. A plain blink is just the 2-step case.
-const STEP_MODES = ['extrude', 'collapse', 'outline', 'morph'];
+const STEP_MODES = ['extrude', 'collapse', 'outline', 'morph', 'depth', 'revolve'];
 
 // Default step count per step-mode (overridable with the `steps` attribute).
-const STEP_COUNTS = { morph: 4 };
+const STEP_COUNTS = { morph: 4, revolve: 4 };
+
+// Glyphs the `decode` scramble cycles through before locking onto the text.
+const DECODE_GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+=?<>/~^|';
 
 // International Morse code, plus digits and a little punctuation.
 const MORSE = {
@@ -159,6 +168,7 @@ class BlinkWc extends HTMLElement {
     document.removeEventListener('visibilitychange', this._onVisibility);
     this._stopMorse();
     this._stopSteps();
+    this._stopDecode();
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -223,6 +233,7 @@ class BlinkWc extends HTMLElement {
     const byWord = this.unit === 'word';
     // Per-unit randomized clocks: each unit blinks on its own timer.
     const twinkle = this.mode === 'twinkle' || this.mode === 'sparkle';
+    const decode = this.mode === 'decode';
     const isWs = (c) => c.trim() === '';
     let i = 0;
     for (const node of textNodes) {
@@ -243,6 +254,8 @@ class BlinkWc extends HTMLElement {
           span.textContent = ' ';
         } else {
           span.textContent = ch;
+          // decode: remember the real glyph so the scramble loop can settle on it
+          if (decode) span.dataset.ch = ch;
         }
         frag.appendChild(span);
       }
@@ -420,6 +433,74 @@ class BlinkWc extends HTMLElement {
 
     this._syncMorse();
     this._syncSteps();
+    this._syncDecode();
+  }
+
+  _stopDecode() {
+    if (this._decodeRAF) cancelAnimationFrame(this._decodeRAF);
+    this._decodeRAF = null;
+  }
+
+  // decode mode: each unit flickers through random glyphs, then locks onto its
+  // real character (stored in data-ch), staggered left-to-right, then
+  // re-scrambles on a loop. Monospace keeps the width stable as glyphs change.
+  // Freezes when paused; shows the plain text under reduced motion.
+  _syncDecode() {
+    this._stopDecode();
+    if (this.mode !== 'decode') return;
+
+    const units = [...this.querySelectorAll('.blink-char')].filter(
+      (s) => !s.classList.contains('blink-space') && s.dataset.ch != null
+    );
+    if (units.length === 0) return;
+
+    const reduce =
+      this.getAttribute('reduced-motion') !== 'ignore' &&
+      matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      for (const s of units) s.textContent = s.dataset.ch;
+      return;
+    }
+
+    const randGlyph = () => DECODE_GLYPHS[(Math.random() * DECODE_GLYPHS.length) | 0];
+
+    const SCRAMBLE_MS = 650;
+    const STAGGER_MS = 45;
+    const HOLD_MS = 1800;
+    const FLIP_MS = 55;
+    let maxSettle = 0;
+    const items = units.map((s) => {
+      const i = Number(s.style.getPropertyValue('--i')) || 0;
+      const settleAt = SCRAMBLE_MS + i * STAGGER_MS;
+      if (settleAt > maxSettle) maxSettle = settleAt;
+      return { s, settleAt, target: s.dataset.ch };
+    });
+
+    let elapsed = 0;
+    let lastT = null;
+    let lastFlip = 0;
+    const tick = (t) => {
+      this._decodeRAF = requestAnimationFrame(tick);
+      if (lastT == null) lastT = t;
+      const dt = t - lastT;
+      lastT = t;
+      if (this._isPaused()) return; // freeze the timeline while paused
+      elapsed += dt;
+      const flip = elapsed - lastFlip >= FLIP_MS;
+      if (flip) lastFlip = elapsed;
+      for (const it of items) {
+        if (elapsed >= it.settleAt) {
+          if (it.s.textContent !== it.target) it.s.textContent = it.target;
+        } else if (flip) {
+          it.s.textContent = randGlyph();
+        }
+      }
+      if (elapsed > maxSettle + HOLD_MS) {
+        elapsed = 0;
+        lastFlip = 0;
+      }
+    };
+    this._decodeRAF = requestAnimationFrame(tick);
   }
 
   // Whether the multi-step engine should drive this element.

@@ -537,3 +537,155 @@ blink-wc[mode='morph'][data-step='3'] .blink-content {
   transform: scale(1.06);
   text-shadow: 0 0 0.5em currentColor;
 }
+
+/* ─── depth — a true-3D punch toward the viewer (perspective + translateZ) ─ */
+blink-wc[mode='depth'] {
+  --blink-step-ease: 0.2s;
+  perspective: 700px;
+  font-weight: 900;
+  color: var(--blink-fg, var(--color-accent, oklch(72% 0.18 255)));
+}
+blink-wc[mode='depth'] .blink-content {
+  transform-style: preserve-3d;
+}
+blink-wc[mode='depth'][data-step='1'] .blink-content {
+  transform: translateZ(140px);
+  text-shadow: 0 0.3em 0.8em oklch(0% 0 0 / 0.4);
+}
+
+/* ─── revolve — a 4-step turn on the Y axis that flips to the back and around */
+blink-wc[mode='revolve'] {
+  --blink-step-ease: 0.25s;
+  perspective: 800px;
+  font-weight: 900;
+}
+blink-wc[mode='revolve'] .blink-content {
+  transform-style: preserve-3d;
+  backface-visibility: visible;
+}
+blink-wc[mode='revolve'][data-step='0'] .blink-content {
+  transform: rotateY(0deg);
+}
+blink-wc[mode='revolve'][data-step='1'] .blink-content {
+  transform: rotateY(90deg);
+  opacity: 0.5;
+}
+blink-wc[mode='revolve'][data-step='2'] .blink-content {
+  transform: rotateY(180deg);
+}
+blink-wc[mode='revolve'][data-step='3'] .blink-content {
+  transform: rotateY(270deg);
+  opacity: 0.5;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * More per-unit motion modes
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/* zoom — each letter swells toward you and fades, in a staggered ripple */
+blink-wc[mode='zoom'] .blink-char {
+  animation: blink-wc-zoom var(--blink-rate, 1s) ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.08s));
+}
+@keyframes blink-wc-zoom {
+  0%,
+  100% {
+    transform: scale(0.6);
+    opacity: var(--blink-min-opacity, 0.4);
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+/* flip3d — split-flap board: each letter tumbles a full turn on the X axis */
+blink-wc[mode='flip3d'] {
+  perspective: 600px;
+}
+blink-wc[mode='flip3d'] .blink-char {
+  animation: blink-wc-flip3d var(--blink-rate, 1.4s) ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.1s));
+}
+@keyframes blink-wc-flip3d {
+  0%,
+  100% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    transform: rotateX(1turn);
+    opacity: 0.4;
+  }
+}
+
+/* swing — letters dangle and swing like pendulums from their top edge */
+blink-wc[mode='swing'] .blink-char {
+  transform-origin: top center;
+  animation: blink-wc-swing var(--blink-rate, 1.6s) ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.08s));
+}
+@keyframes blink-wc-swing {
+  0%,
+  100% {
+    transform: rotate(-12deg);
+  }
+  50% {
+    transform: rotate(12deg);
+  }
+}
+
+/* shake — nervous jitter with a blink, each letter slightly out of phase */
+blink-wc[mode='shake'] .blink-char {
+  animation: blink-wc-shake 0.4s steps(4, jump-none) infinite;
+  animation-delay: calc(var(--i, 0) * -0.05s);
+}
+@keyframes blink-wc-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-0.05em, 0.04em);
+    opacity: 0.7;
+  }
+  40% {
+    transform: translate(0.05em, -0.03em);
+  }
+  60% {
+    transform: translate(-0.04em, -0.04em);
+    opacity: 0.7;
+  }
+  80% {
+    transform: translate(0.04em, 0.03em);
+  }
+}
+
+/* heartbeat — a double-thump scale pulse rippling across the letters */
+blink-wc[mode='heartbeat'] .blink-char {
+  animation: blink-wc-heartbeat var(--blink-rate, 1.2s) ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.05s));
+}
+@keyframes blink-wc-heartbeat {
+  0%,
+  40%,
+  100% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(1.3);
+  }
+  20% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.2);
+  }
+}
+
+/* decode — glyphs scramble (set in JS) then lock onto the real text. Monospace
+   keeps the width stable while glyphs change. Matrix-green glow by default. */
+blink-wc[mode='decode'] {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: var(--blink-fg, var(--color-success, oklch(85% 0.2 145)));
+  text-shadow: 0 0 0.25em currentColor;
+}

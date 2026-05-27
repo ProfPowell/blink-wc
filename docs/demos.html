@@ -140,13 +140,17 @@
       </section>
 
       <section>
-        <h2>5. <code>mode="morse"</code> — blink it out in code</h2>
+        <h2>
+          5. <code>mode="morse"</code> &amp; <code>mode="decode"</code> — blink it out in code
+        </h2>
         <p>
-          The text is blinked out as International Morse code, driven by a small
-          <code>requestAnimationFrame</code> loop. The dot/dash transcription shows below.
+          <code>morse</code> blinks the text out as International Morse code (with a dot/dash
+          caption). <code>decode</code> flickers each unit through random glyphs, then locks onto
+          the real text — both driven by a small <code>requestAnimationFrame</code> loop.
         </p>
         <div class="demo"><blink-wc mode="morse">SOS</blink-wc></div>
         <div class="demo"><blink-wc mode="morse">HELLO WORLD</blink-wc></div>
+        <div class="demo"><blink-wc mode="decode">DECODING TRANSMISSION</blink-wc></div>
       </section>
 
       <section>
@@ -179,6 +183,21 @@
 
         <h3><code>mode="typewriter"</code> — typed out with a caret</h3>
         <div class="demo"><blink-wc mode="typewriter">now typing&hellip;</blink-wc></div>
+
+        <h3><code>mode="zoom"</code> — letters swell toward you</h3>
+        <div class="demo"><blink-wc mode="zoom">zoom in and out</blink-wc></div>
+
+        <h3><code>mode="flip3d"</code> — split-flap tumble</h3>
+        <div class="demo"><blink-wc mode="flip3d">DEPARTURES</blink-wc></div>
+
+        <h3><code>mode="swing"</code> — pendulum letters</h3>
+        <div class="demo"><blink-wc mode="swing">swing it</blink-wc></div>
+
+        <h3><code>mode="shake"</code> — nervous jitter</h3>
+        <div class="demo"><blink-wc mode="shake">shaken not stirred</blink-wc></div>
+
+        <h3><code>mode="heartbeat"</code> — double-thump pulse</h3>
+        <div class="demo"><blink-wc mode="heartbeat">♥ ba-dum ba-dum ♥</blink-wc></div>
       </section>
 
       <section>
@@ -212,6 +231,12 @@
 
         <h3><code>mode="morph"</code> — a 4-step colour + transform sequence</h3>
         <div class="demo"><blink-wc mode="morph" rate="1.6s">METAMORPH</blink-wc></div>
+
+        <h3><code>mode="depth"</code> — a true-3D punch toward you</h3>
+        <div class="demo"><blink-wc mode="depth" rate="1.4s">DEPTH</blink-wc></div>
+
+        <h3><code>mode="revolve"</code> — flips to the back and around</h3>
+        <div class="demo"><blink-wc mode="revolve" rate="2.4s">REVOLVE</blink-wc></div>
 
         <h3><code>behavior="steps"</code> — roll your own with CSS per step</h3>
         <p>
