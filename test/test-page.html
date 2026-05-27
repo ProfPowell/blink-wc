@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>&lt;blink-wc&gt; — test harness</title>
+    <link rel="stylesheet" href="../src/blink-wc.css" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem;
+        line-height: 1.5;
+      }
+      section {
+        margin-block: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>blink-wc test harness</h1>
+
+    <section>
+      <h2>Default (blink)</h2>
+      <blink-wc id="default">Hello from the default blink. The old tag, reborn.</blink-wc>
+    </section>
+
+    <section>
+      <h2>Pulse behavior</h2>
+      <blink-wc id="pulse" behavior="pulse">Breathing in and out.</blink-wc>
+    </section>
+
+    <section>
+      <h2>Neon theme</h2>
+      <blink-wc id="neon" mode="neon">OPEN</blink-wc>
+    </section>
+
+    <section>
+      <h2>Letter mode (twinkle)</h2>
+      <blink-wc id="twinkle" mode="twinkle">twinkling letters</blink-wc>
+    </section>
+
+    <section>
+      <h2>Wave mode</h2>
+      <blink-wc id="wave" mode="wave">catch the wave</blink-wc>
+    </section>
+
+    <section>
+      <h2>Morse mode</h2>
+      <blink-wc id="morse" mode="morse">SOS</blink-wc>
+    </section>
+
+    <section>
+      <h2>Controls</h2>
+      <blink-wc id="ctrl">Controllable blink.</blink-wc>
+      <button id="btn-start">start</button>
+      <button id="btn-stop">stop</button>
+      <button id="btn-toggle">toggle</button>
+    </section>
+
+    <script type="module" src="../src/blink-wc.js"></script>
+    <script type="module">
+      const ctrl = document.getElementById('ctrl');
+      document.getElementById('btn-start').addEventListener('click', () => ctrl.start());
+      document.getElementById('btn-stop').addEventListener('click', () => ctrl.stop());
+      document.getElementById('btn-toggle').addEventListener('click', () => ctrl.toggle());
+    </script>
+  </body>
+</html>
