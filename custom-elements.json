@@ -33,6 +33,11 @@
             },
             {
               "kind": "field",
+              "name": "steps",
+              "readonly": true
+            },
+            {
+              "kind": "field",
               "name": "playState",
               "readonly": true
             },
@@ -123,6 +128,27 @@
             },
             {
               "kind": "method",
+              "name": "_usesSteps"
+            },
+            {
+              "kind": "method",
+              "name": "_parseTime",
+              "parameters": [
+                {
+                  "name": "value"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "_stopSteps"
+            },
+            {
+              "kind": "method",
+              "name": "_syncSteps"
+            },
+            {
+              "kind": "method",
               "name": "_dispatch",
               "parameters": [
                 {
@@ -151,6 +177,9 @@
             },
             {
               "name": "count"
+            },
+            {
+              "name": "steps"
             },
             {
               "name": "play-state"

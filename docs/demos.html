@@ -193,7 +193,56 @@
       </section>
 
       <section>
-        <h2>8. Programmatic control</h2>
+        <h2>8. The multi-step engine</h2>
+        <p>
+          With <code>behavior="steps"</code> (or any step mode) the blink advances through
+          <code>N</code> steps across one cycle, and each step is its own style state —
+          <code>data-step="0"</code>…<code>data-step="N-1"</code>. A plain blink is the 2-step case.
+          <code>--blink-step-ease</code> morphs smoothly between steps.
+        </p>
+
+        <h3><code>mode="extrude"</code> — isometric 3D punch toward you</h3>
+        <div class="demo"><blink-wc mode="extrude" rate="1.2s">PUNCH IT</blink-wc></div>
+
+        <h3><code>mode="collapse"</code> — squash flat, then pop</h3>
+        <div class="demo"><blink-wc mode="collapse" rate="1s">collapse</blink-wc></div>
+
+        <h3><code>mode="outline"</code> — solid ↔ hollow</h3>
+        <div class="demo"><blink-wc mode="outline" rate="1.2s">OUTLINE</blink-wc></div>
+
+        <h3><code>mode="morph"</code> — a 4-step colour + transform sequence</h3>
+        <div class="demo"><blink-wc mode="morph" rate="1.6s">METAMORPH</blink-wc></div>
+
+        <h3><code>behavior="steps"</code> — roll your own with CSS per step</h3>
+        <p>
+          A custom 3-step traffic light, styled with
+          <code>blink-wc[data-step='K'] .blink-content { … }</code>.
+        </p>
+        <style>
+          blink-wc.traffic {
+            --blink-step-ease: 0.15s;
+            font-size: 2.5rem;
+          }
+          blink-wc.traffic[data-step='0'] .blink-content {
+            color: oklch(62% 0.2 25);
+            text-shadow: 0 0 0.4em currentColor;
+          }
+          blink-wc.traffic[data-step='1'] .blink-content {
+            color: oklch(80% 0.16 85);
+            text-shadow: 0 0 0.4em currentColor;
+          }
+          blink-wc.traffic[data-step='2'] .blink-content {
+            color: oklch(70% 0.18 145);
+            text-shadow: 0 0 0.4em currentColor;
+          }
+        </style>
+        <div class="demo">
+          <blink-wc class="traffic" behavior="steps" steps="3" rate="3s">●</blink-wc>
+        </div>
+      </section>
+
+      <section>
+        <h2>9. Programmatic control</h2>
         <p>
           <code>start()</code>, <code>stop()</code>, and <code>toggle()</code> work just like the
           old <code>&lt;blink&gt;</code>. The component also fires <code>blink-cycle</code> on each

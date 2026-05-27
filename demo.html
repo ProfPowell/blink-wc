@@ -151,8 +151,19 @@
     <div class="stage"><blink-wc mode="cascade" unit="word">a soft falling cascade</blink-wc></div>
     <div class="stage"><blink-wc mode="typewriter">now typing&hellip;</blink-wc></div>
 
-    <!-- ── 8. Programmatic control ───────────────────────────────────────── -->
-    <h2>8. Programmatic control (legacy API compat)</h2>
+    <!-- ── 8. Step engine ────────────────────────────────────────────────── -->
+    <h2>8. The multi-step engine</h2>
+    <p>
+      Each step of the cycle is its own style. A plain blink is the 2-step case;
+      <code>extrude</code> punches toward you, <code>morph</code> runs 4 distinct steps.
+    </p>
+    <div class="stage"><blink-wc mode="extrude" rate="1.2s">PUNCH</blink-wc></div>
+    <div class="stage"><blink-wc mode="collapse" rate="1s">collapse</blink-wc></div>
+    <div class="stage"><blink-wc mode="outline" rate="1.2s">OUTLINE</blink-wc></div>
+    <div class="stage"><blink-wc mode="morph" rate="1.6s">MORPH</blink-wc></div>
+
+    <!-- ── 9. Programmatic control ───────────────────────────────────────── -->
+    <h2>9. Programmatic control (legacy API compat)</h2>
     <p><code>start()</code>, <code>stop()</code>, <code>toggle()</code> — just like the old tag.</p>
     <div class="stage"><blink-wc id="ctrl-demo">Control me with the buttons.</blink-wc></div>
     <div class="controls">
