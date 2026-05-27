@@ -48,6 +48,9 @@ export type BlinkMode =
 /** Granularity for the per-unit motion modes. */
 export type BlinkUnit = 'letter' | 'word';
 
+/** Whether the step engine advances the whole element or each unit. */
+export type BlinkStepBy = 'element' | 'letter' | 'word';
+
 export interface BlinkWcEventMap {
   'blink-start': CustomEvent<void>;
   'blink-pause': CustomEvent<void>;
@@ -69,6 +72,8 @@ export declare class BlinkWc extends HTMLElement {
   get steps(): number;
   /** Per-step hold weights, or `null`. Attribute: `step-durations`. */
   get stepDurations(): string | null;
+  /** Whether the step engine steps the whole element or each unit. Attribute: `step-by`. */
+  get stepBy(): BlinkStepBy;
   /** Playback state. Attribute: `play-state`. Default `running`. */
   get playState(): BlinkPlayState;
   /** Active visual/motion preset. Attribute: `mode`. Default `''` (none). */

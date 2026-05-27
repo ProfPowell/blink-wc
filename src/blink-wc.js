@@ -115,6 +115,7 @@ class BlinkWc extends HTMLElement {
       'count',
       'steps',
       'step-durations',
+      'step-by',
       'play-state',
       'pause-on-hover',
       'reduced-motion',
@@ -145,6 +146,10 @@ class BlinkWc extends HTMLElement {
   }
   get stepDurations() {
     return this.getAttribute('step-durations') || null;
+  }
+  get stepBy() {
+    const v = this.getAttribute('step-by');
+    return v === 'letter' || v === 'word' ? v : 'element';
   }
   get playState() {
     return this.getAttribute('play-state') || 'running';
@@ -177,7 +182,9 @@ class BlinkWc extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue === newValue || !this._built) return;
-    if (name === 'mode' || name === 'unit') this._renderContent();
+    if (name === 'mode' || name === 'unit' || name === 'step-by' || name === 'behavior') {
+      this._renderContent();
+    }
     this._update();
     if (name === 'play-state') {
       this._dispatch(newValue === 'paused' ? 'blink-pause' : 'blink-start');
@@ -215,26 +222,29 @@ class BlinkWc extends HTMLElement {
     this._renderContent();
   }
 
-  // Restore authored markup, then split into letters if the mode needs it.
+  // Restore authored markup, then split into units if the mode needs it. Per-unit
+  // motion modes split by `unit`; per-unit step sequences split by `step-by`.
   _renderContent() {
     if (this._sourceHTML == null) return;
     this._content.innerHTML = this._sourceHTML;
-    if (LETTER_MODES.includes(this.mode)) {
-      this._splitLetters();
+    const perUnitSteps = this._usesSteps() && this.stepBy !== 'element';
+    if (LETTER_MODES.includes(this.mode) || perUnitSteps) {
+      const byWord = perUnitSteps ? this.stepBy === 'word' : this.unit === 'word';
+      this._splitLetters(byWord);
       this.dataset.split = '';
     } else {
       delete this.dataset.split;
     }
   }
 
-  // Wrap each character in a <span class="blink-char"> with a stagger index, so
-  // CSS can animate units individually (wave, twinkle, sparkle, chase, …).
-  _splitLetters() {
+  // Wrap each unit in a <span class="blink-char"> with a stagger index, so CSS
+  // can animate units individually (wave, twinkle, …) and the step engine can
+  // advance each unit's data-step on its own staggered clock.
+  _splitLetters(byWord = this.unit === 'word') {
     const walker = document.createTreeWalker(this._content, NodeFilter.SHOW_TEXT);
     const textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
 
-    const byWord = this.unit === 'word';
     // Per-unit randomized clocks: each unit blinks on its own timer.
     const twinkle = this.mode === 'twinkle' || this.mode === 'sparkle';
     const decode = this.mode === 'decode';
@@ -541,26 +551,47 @@ class BlinkWc extends HTMLElement {
     return Array.from({ length: n }, (_, i) => parts[i % parts.length]);
   }
 
+  // The element(s) that carry data-step: the whole content for step-by="element",
+  // or each unit span for step-by="letter"/"word".
+  _stepTargets() {
+    if (this.stepBy !== 'element' && this.dataset.split != null) {
+      return [...this.querySelectorAll('.blink-char')];
+    }
+    return this._content ? [this._content] : [];
+  }
+
+  // Clear any data-step left on the content or unit spans (when stepping stops).
+  _clearStepTargets() {
+    delete this._content?.dataset.step;
+    this.querySelectorAll('.blink-char[data-step]').forEach((el) => delete el.dataset.step);
+  }
+
   // Multi-step engine: advance data-step="0..N-1" across one cycle (`rate`). Each
   // step holds for a slice of the cycle — equal by default, or weighted by
   // `step-durations`. CSS styles each step (colour, transform, outline, …) and
   // can give each step its own transition timing (--blink-step-ease /
-  // --blink-step-timing); a plain blink is the 2-step case. Freezes when
-  // paused/off-screen/tab-hidden; rests at step 0 under reduced motion.
+  // --blink-step-timing); a plain blink is the 2-step case. With step-by="letter"
+  // (or "word") every unit runs the sequence offset by its index, so the states
+  // ripple across the text. Freezes when paused/off-screen/tab-hidden; rests at
+  // step 0 under reduced motion.
   _syncSteps() {
     this._stopSteps();
     if (!this._usesSteps()) {
-      delete this.dataset.step;
+      delete this.dataset.stepping;
+      this._clearStepTargets();
       return;
     }
+    this.dataset.stepping = '';
 
     const n = this.steps;
+    const targets = this._stepTargets();
+    if (targets.length === 0) return;
 
     const reduce =
       this.getAttribute('reduced-motion') !== 'ignore' &&
       matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) {
-      this.dataset.step = '0';
+      for (const el of targets) el.dataset.step = '0';
       return;
     }
 
@@ -575,10 +606,23 @@ class BlinkWc extends HTMLElement {
       bounds.push((acc / total) * cycleMs);
     }
 
+    // Per-unit stepping offsets each unit's phase by a stagger so the states
+    // travel across the text. Read --blink-stagger (seconds) for the step.
+    const perUnit = targets.length > 1;
+    const staggerMs = perUnit
+      ? (parseFloat(getComputedStyle(this).getPropertyValue('--blink-stagger')) || 0.08) * 1000
+      : 0;
+
+    const stepAt = (pos) => {
+      let idx = 0;
+      while (idx < n - 1 && pos >= bounds[idx]) idx++;
+      return idx;
+    };
+
+    const prev = new Array(targets.length).fill(0);
+    targets.forEach((el) => (el.dataset.step = '0'));
     let elapsed = 0;
     let lastT = null;
-    let prev = 0;
-    this.dataset.step = '0';
     const tick = (t) => {
       this._stepRAF = requestAnimationFrame(tick);
       if (lastT == null) lastT = t;
@@ -586,13 +630,13 @@ class BlinkWc extends HTMLElement {
       lastT = t;
       if (this._isPaused()) return; // freeze the timeline while paused
       elapsed += dt;
-      const pos = elapsed % cycleMs;
-      let idx = 0;
-      while (idx < n - 1 && pos >= bounds[idx]) idx++;
-      if (idx !== prev) {
-        this.dataset.step = String(idx);
-        if (idx < prev) this._dispatch('blink-cycle'); // wrapped back to the start
-        prev = idx;
+      for (let k = 0; k < targets.length; k++) {
+        const idx = stepAt((elapsed + k * staggerMs) % cycleMs);
+        if (idx !== prev[k]) {
+          targets[k].dataset.step = String(idx);
+          if (k === 0 && idx < prev[k]) this._dispatch('blink-cycle'); // wrapped to start
+          prev[k] = idx;
+        }
       }
     };
     this._stepRAF = requestAnimationFrame(tick);

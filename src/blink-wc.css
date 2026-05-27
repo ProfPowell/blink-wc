@@ -104,7 +104,7 @@ blink-wc[data-behavior='flicker'] .blink-content {
    the tie.) */
 blink-wc[data-split] .blink-content,
 blink-wc[mode='morse'] .blink-content,
-blink-wc[data-step] .blink-content {
+blink-wc[data-stepping] .blink-content {
   animation: none;
 }
 
@@ -135,7 +135,7 @@ blink-wc[pause-on-hover] {
     opacity: 1 !important;
   }
   /* Step modes rest at step 0; force the resting transform flat as well. */
-  blink-wc:not([reduced-motion='ignore'])[data-step] .blink-content {
+  blink-wc:not([reduced-motion='ignore'])[data-stepping] :is(.blink-content, .blink-char) {
     transform: none !important;
   }
   blink-wc:not([reduced-motion='ignore'])[mode='morse'] .blink-content {
@@ -448,12 +448,13 @@ blink-wc[mode='typewriter'] .blink-content::after {
  * --blink-step-timing is the transition timing-function (default `ease`).
  *
  * Both are read from the *incoming* step's computed style, so a step can carry
- * its own duration and easing — set them under `blink-wc[data-step='K']` for
- * per-step timing. The hold time of each step is set by `step-durations`.
- * Authors target their own steps with `blink-wc[data-step='K'] .blink-content`.
+ * its own duration and easing. The hold time of each step is set by
+ * `step-durations`. With step-by="letter"/"word" each unit carries its own
+ * data-step (offset by --blink-stagger) so the states ripple across the text.
+ * Authors target steps with `blink-wc :is(.blink-content,.blink-char)[data-step='K']`.
  * ──────────────────────────────────────────────────────────────────────── */
 
-blink-wc[data-step] .blink-content {
+blink-wc :is(.blink-content, .blink-char)[data-step] {
   display: inline-block;
   transition:
     opacity var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
@@ -465,7 +466,7 @@ blink-wc[data-step] .blink-content {
 }
 
 /* Default two-state: behavior="steps" with no preset is a plain blink. */
-blink-wc[behavior='steps'][data-step='1'] .blink-content {
+blink-wc[behavior='steps'] :is(.blink-content, .blink-char)[data-step='1'] {
   opacity: var(--blink-min-opacity, 0);
 }
 
@@ -479,10 +480,10 @@ blink-wc[mode='extrude'] {
   color: var(--blink-fg, var(--color-accent, oklch(72% 0.18 255)));
   perspective: 600px;
 }
-blink-wc[mode='extrude'] .blink-content {
+blink-wc[mode='extrude'] :is(.blink-content, .blink-char) {
   transform-origin: center;
 }
-blink-wc[mode='extrude'][data-step='1'] .blink-content {
+blink-wc[mode='extrude'] :is(.blink-content, .blink-char)[data-step='1'] {
   transform: scale(1.14) translateY(-0.04em);
   text-shadow:
     0.025em 0.025em var(--_ext),
@@ -498,10 +499,10 @@ blink-wc[mode='collapse'] {
   --blink-step-ease: 0.12s;
   font-weight: 800;
 }
-blink-wc[mode='collapse'] .blink-content {
+blink-wc[mode='collapse'] :is(.blink-content, .blink-char) {
   transform-origin: center bottom;
 }
-blink-wc[mode='collapse'][data-step='1'] .blink-content {
+blink-wc[mode='collapse'] :is(.blink-content, .blink-char)[data-step='1'] {
   transform: scaleY(0.06) scaleX(1.12);
   opacity: 0.6;
 }
@@ -513,7 +514,7 @@ blink-wc[mode='outline'] {
   font-weight: 900;
   color: var(--_stroke);
 }
-blink-wc[mode='outline'][data-step='1'] .blink-content {
+blink-wc[mode='outline'] :is(.blink-content, .blink-char)[data-step='1'] {
   color: transparent;
   -webkit-text-stroke: 0.035em var(--_stroke);
 }
@@ -523,20 +524,20 @@ blink-wc[mode='morph'] {
   --blink-step-ease: 0.16s;
   font-weight: 900;
 }
-blink-wc[mode='morph'][data-step='0'] .blink-content {
+blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='0'] {
   color: var(--color-accent, oklch(65% 0.2 20));
   transform: scale(1);
 }
-blink-wc[mode='morph'][data-step='1'] .blink-content {
+blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='1'] {
   color: var(--color-success, oklch(70% 0.18 145));
   transform: scale(1.1) rotate(-2deg);
 }
-blink-wc[mode='morph'][data-step='2'] .blink-content {
+blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='2'] {
   color: var(--color-warning, oklch(78% 0.16 85));
   transform: scale(0.92) rotate(2deg);
   letter-spacing: 0.06em;
 }
-blink-wc[mode='morph'][data-step='3'] .blink-content {
+blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='3'] {
   color: var(--color-primary, oklch(60% 0.2 285));
   transform: scale(1.06);
   text-shadow: 0 0 0.5em currentColor;
@@ -549,10 +550,10 @@ blink-wc[mode='depth'] {
   font-weight: 900;
   color: var(--blink-fg, var(--color-accent, oklch(72% 0.18 255)));
 }
-blink-wc[mode='depth'] .blink-content {
+blink-wc[mode='depth'] :is(.blink-content, .blink-char) {
   transform-style: preserve-3d;
 }
-blink-wc[mode='depth'][data-step='1'] .blink-content {
+blink-wc[mode='depth'] :is(.blink-content, .blink-char)[data-step='1'] {
   transform: translateZ(140px);
   text-shadow: 0 0.3em 0.8em oklch(0% 0 0 / 0.4);
 }
@@ -563,21 +564,21 @@ blink-wc[mode='revolve'] {
   perspective: 800px;
   font-weight: 900;
 }
-blink-wc[mode='revolve'] .blink-content {
+blink-wc[mode='revolve'] :is(.blink-content, .blink-char) {
   transform-style: preserve-3d;
   backface-visibility: visible;
 }
-blink-wc[mode='revolve'][data-step='0'] .blink-content {
+blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='0'] {
   transform: rotateY(0deg);
 }
-blink-wc[mode='revolve'][data-step='1'] .blink-content {
+blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='1'] {
   transform: rotateY(90deg);
   opacity: 0.5;
 }
-blink-wc[mode='revolve'][data-step='2'] .blink-content {
+blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='2'] {
   transform: rotateY(180deg);
 }
-blink-wc[mode='revolve'][data-step='3'] .blink-content {
+blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='3'] {
   transform: rotateY(270deg);
   opacity: 0.5;
 }

@@ -43,6 +43,11 @@
             },
             {
               "kind": "field",
+              "name": "stepBy",
+              "readonly": true
+            },
+            {
+              "kind": "field",
               "name": "playState",
               "readonly": true
             },
@@ -82,7 +87,13 @@
             },
             {
               "kind": "method",
-              "name": "_splitLetters"
+              "name": "_splitLetters",
+              "parameters": [
+                {
+                  "name": "byWord",
+                  "default": "this.unit === 'word'"
+                }
+              ]
             },
             {
               "kind": "method",
@@ -167,6 +178,14 @@
             },
             {
               "kind": "method",
+              "name": "_stepTargets"
+            },
+            {
+              "kind": "method",
+              "name": "_clearStepTargets"
+            },
+            {
+              "kind": "method",
               "name": "_syncSteps"
             },
             {
@@ -205,6 +224,9 @@
             },
             {
               "name": "step-durations"
+            },
+            {
+              "name": "step-by"
             },
             {
               "name": "play-state"

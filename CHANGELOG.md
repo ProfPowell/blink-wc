@@ -4,6 +4,26 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] — 2026-05-27
+
+### Added
+
+- **Per-letter (and per-word) step sequences** — the new `step-by` attribute
+  (`element` | `letter` | `word`, default `element`) makes the multi-step engine
+  advance each unit's `data-step` on its own staggered clock (offset by
+  `--blink-stagger`), so the step states ripple across the text instead of
+  changing in lockstep. Works with the built-in step modes (`extrude`, `depth`,
+  `morph`, …) and with custom `behavior="steps"` CSS. Added a `stepBy` getter.
+- **Interactive playground** (`docs/playground.html`) — live controls for every
+  attribute, a themed preview, and copy-ready generated markup.
+
+### Changed
+
+- The step engine now sets `data-step` on the **stepped element** (the
+  `.blink-content`, or each `.blink-char` when stepping per unit) rather than on
+  the host; the host carries a `data-stepping` marker. Author selectors should
+  target `blink-wc :is(.blink-content, .blink-char)[data-step='K']`.
+
 ## [1.3.0] — 2026-05-27
 
 ### Added

@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230a66c2'/%3E%3Ccircle cx='8' cy='8' r='3' fill='white'/%3E%3C/svg%3E"
+    />
+    <title>Playground — blink-wc</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/profpowell/vanilla-breeze@main/dist/cdn/vanilla-breeze.css"
+    />
+    <script>
+      // Vanilla Breeze theme-picker base. Also shim its hardcoded /cdn/* fetches
+      // (e.g. themes/manifest.json) onto the CDN so they resolve on GitHub Pages.
+      window.__VB_THEME_BASE =
+        'https://cdn.jsdelivr.net/gh/profpowell/vanilla-breeze@main/dist/cdn';
+      (function () {
+        const CDN = window.__VB_THEME_BASE;
+        const origFetch = window.fetch.bind(window);
+        window.fetch = (input, init) => {
+          const url = typeof input === 'string' ? input : input && input.url;
+          if (typeof url === 'string' && url.startsWith('/cdn/')) {
+            return origFetch(CDN + url.slice(4), init);
+          }
+          return origFetch(input, init);
+        };
+      })();
+    </script>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/gh/profpowell/vanilla-breeze@main/dist/cdn/components/theme-picker.js"
+    ></script>
+
+    <link rel="stylesheet" href="blink-wc.css" />
+    <script type="module" src="blink-wc.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .pg {
+        display: grid;
+        grid-template-columns: 20rem 1fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+      @media (max-width: 48rem) {
+        .pg {
+          grid-template-columns: 1fr;
+        }
+      }
+      .pg-controls {
+        display: grid;
+        gap: 0.85rem;
+        padding: 1.25rem;
+        background: var(--color-surface, oklch(96% 0.01 250));
+        border: 1px solid var(--color-border, oklch(85% 0.01 250));
+        border-radius: var(--radius-m, 0.5rem);
+        position: sticky;
+        top: 4.5rem;
+      }
+      .pg-field {
+        display: grid;
+        gap: 0.25rem;
+        font-size: 0.85rem;
+      }
+      .pg-field label {
+        font-weight: 600;
+        color: var(--color-text-muted, oklch(50% 0.02 250));
+      }
+      .pg-field select,
+      .pg-field input[type='text'],
+      .pg-field input[type='number'] {
+        font: inherit;
+        font-size: 0.9rem;
+        padding: 0.4rem 0.5rem;
+        color: var(--color-text, oklch(20% 0.02 250));
+        background: var(--color-background, white);
+        border: 1px solid var(--color-border, oklch(85% 0.01 250));
+        border-radius: var(--radius-s, 0.3rem);
+      }
+      .pg-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .pg-checks {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+      }
+      .pg-checks label {
+        display: inline-flex;
+        gap: 0.35rem;
+        align-items: center;
+      }
+      .pg-stage {
+        display: grid;
+        place-items: center;
+        min-height: 14rem;
+        padding: 2rem 1.5rem;
+        font-size: clamp(2rem, 6vw, 3.5rem);
+        font-weight: 800;
+        text-align: center;
+        background: var(--color-surface-sunken, var(--color-surface, oklch(94% 0.01 250)));
+        border: 1px solid var(--color-border, oklch(85% 0.01 250));
+        border-radius: var(--radius-m, 0.5rem);
+        overflow: hidden;
+      }
+      .pg-out {
+        margin-block: 1rem 0;
+      }
+      .pg-out pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .pg-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .pg-actions button {
+        padding: 0.4rem 0.9rem;
+        border: 1px solid var(--color-border, oklch(85% 0.01 250));
+        background: var(--color-background, white);
+        color: var(--color-text, oklch(20% 0.02 250));
+        border-radius: var(--radius-s, 0.3rem);
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.85rem;
+      }
+      .pg-actions button:hover {
+        border-color: var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+      }
+      .pg-hint {
+        font-size: 0.78rem;
+        color: var(--color-text-muted, oklch(55% 0.02 250));
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <span class="logo">&lt;blink-wc&gt;</span>
+      <span class="links">
+        <a href="index.html">Home</a>
+        <a href="demos.html">Demos</a>
+        <a href="playground.html" class="active">Playground</a>
+        <a href="api.html">API</a>
+        <a href="https://github.com/profpowell/blink-wc">GitHub</a>
+      </span>
+      <span class="spacer"></span>
+      <theme-picker compact>
+        <button type="button" data-trigger class="ghost vb-theme-trigger">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+            <path
+              d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.012 17.5 2 12 2z"
+            />
+          </svg>
+          Theme
+        </button>
+      </theme-picker>
+    </nav>
+
+    <main>
+      <section class="hero" style="padding-block: 2rem 0">
+        <h1 style="font-size: clamp(1.75rem, 5vw, 2.75rem)">Playground</h1>
+        <p class="tagline">
+          Mix and match every option, watch it live, and copy the markup. Switch the page theme from
+          the picker to see the themed modes re-skin.
+        </p>
+      </section>
+
+      <section>
+        <div class="pg">
+          <form class="pg-controls" id="controls">
+            <div class="pg-field">
+              <label for="c-text">Text</label>
+              <input type="text" id="c-text" value="BLINK" />
+            </div>
+
+            <div class="pg-field">
+              <label for="c-mode">mode</label>
+              <select id="c-mode">
+                <option value="">(none)</option>
+                <optgroup label="Surface themes">
+                  <option>neon</option>
+                  <option>crt</option>
+                  <option>terminal</option>
+                  <option>warning</option>
+                  <option>alert</option>
+                  <option>police</option>
+                  <option>vegas</option>
+                </optgroup>
+                <optgroup label="Per-unit motion">
+                  <option>wave</option>
+                  <option>twinkle</option>
+                  <option>sparkle</option>
+                  <option>rainbow</option>
+                  <option>chase</option>
+                  <option>glitch</option>
+                  <option>cascade</option>
+                  <option>typewriter</option>
+                  <option>zoom</option>
+                  <option>flip3d</option>
+                  <option>swing</option>
+                  <option>shake</option>
+                  <option>heartbeat</option>
+                </optgroup>
+                <optgroup label="Special (JS)">
+                  <option>morse</option>
+                  <option>decode</option>
+                </optgroup>
+                <optgroup label="Step modes">
+                  <option>extrude</option>
+                  <option>collapse</option>
+                  <option>outline</option>
+                  <option>morph</option>
+                  <option>depth</option>
+                  <option>revolve</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="pg-field">
+              <label for="c-behavior">behavior</label>
+              <select id="c-behavior">
+                <option>blink</option>
+                <option>pulse</option>
+                <option>flicker</option>
+                <option>steps</option>
+              </select>
+            </div>
+
+            <div class="pg-field">
+              <label for="c-rate">rate <span id="c-rate-val" class="pg-hint"></span></label>
+              <input type="text" id="c-rate" value="1s" />
+            </div>
+
+            <div class="pg-field">
+              <label for="c-unit">unit (per-unit motion)</label>
+              <select id="c-unit">
+                <option>letter</option>
+                <option>word</option>
+              </select>
+            </div>
+
+            <div class="pg-field">
+              <label for="c-steps">steps</label>
+              <input type="number" id="c-steps" min="2" max="12" placeholder="(default)" />
+            </div>
+
+            <div class="pg-field">
+              <label for="c-durations">step-durations</label>
+              <input type="text" id="c-durations" placeholder="e.g. 3 1 1" />
+            </div>
+
+            <div class="pg-field">
+              <label for="c-stepby">step-by</label>
+              <select id="c-stepby">
+                <option>element</option>
+                <option>letter</option>
+                <option>word</option>
+              </select>
+            </div>
+
+            <div class="pg-field">
+              <label for="c-count">count</label>
+              <input type="text" id="c-count" placeholder="infinite" />
+            </div>
+
+            <div class="pg-field">
+              <label for="c-min">min-opacity</label>
+              <input type="text" id="c-min" placeholder="(default)" />
+            </div>
+
+            <div class="pg-field">
+              <label for="c-reduced">reduced-motion</label>
+              <select id="c-reduced">
+                <option>respect</option>
+                <option>ignore</option>
+              </select>
+            </div>
+
+            <div class="pg-checks">
+              <label><input type="checkbox" id="c-pause" /> pause-on-hover</label>
+            </div>
+
+            <div class="pg-actions">
+              <button type="button" id="b-start">start()</button>
+              <button type="button" id="b-stop">stop()</button>
+              <button type="button" id="b-toggle">toggle()</button>
+              <button type="button" id="b-copy">Copy HTML</button>
+            </div>
+          </form>
+
+          <div>
+            <div class="pg-stage">
+              <blink-wc id="live">BLINK</blink-wc>
+            </div>
+            <div class="pg-out">
+              <pre><code id="snippet"></code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        <code>&lt;blink-wc&gt;</code> is part of the
+        <a href="https://vanilla-breeze.com">Vanilla Breeze</a> family of vanilla web components.
+      </p>
+      <p>MIT licensed.</p>
+    </footer>
+
+    <script type="module">
+      const live = document.getElementById('live');
+      const snippet = document.getElementById('snippet');
+      const $ = (id) => document.getElementById(id);
+
+      // Attribute name -> control + its default (defaults are omitted from output).
+      const fields = [
+        { attr: 'mode', el: 'c-mode', def: '' },
+        { attr: 'behavior', el: 'c-behavior', def: 'blink' },
+        { attr: 'rate', el: 'c-rate', def: '1s' },
+        { attr: 'unit', el: 'c-unit', def: 'letter' },
+        { attr: 'steps', el: 'c-steps', def: '' },
+        { attr: 'step-durations', el: 'c-durations', def: '' },
+        { attr: 'step-by', el: 'c-stepby', def: 'element' },
+        { attr: 'count', el: 'c-count', def: '' },
+        { attr: 'min-opacity', el: 'c-min', def: '' },
+        { attr: 'reduced-motion', el: 'c-reduced', def: 'respect' },
+      ];
+
+      function apply() {
+        const text = $('c-text').value || 'BLINK';
+        live.textContent = text;
+
+        for (const f of fields) {
+          const value = $(f.el).value.trim();
+          if (value === '' || value === f.def) live.removeAttribute(f.attr);
+          else live.setAttribute(f.attr, value);
+        }
+        live.toggleAttribute('pause-on-hover', $('c-pause').checked);
+
+        // Re-render after content/attr changes so split modes rebuild.
+        live.refresh?.();
+        renderSnippet(text);
+      }
+
+      function renderSnippet(text) {
+        const attrs = [];
+        for (const f of fields) {
+          const v = $(f.el).value.trim();
+          if (v !== '' && v !== f.def) attrs.push(`${f.attr}="${v}"`);
+        }
+        if ($('c-pause').checked) attrs.push('pause-on-hover');
+        const open = `&lt;blink-wc${attrs.map((a) => ' ' + a).join('')}&gt;`;
+        snippet.innerHTML = `${open}${text}&lt;/blink-wc&gt;`;
+      }
+
+      document.getElementById('controls').addEventListener('input', apply);
+      $('b-start').addEventListener('click', () => live.start());
+      $('b-stop').addEventListener('click', () => live.stop());
+      $('b-toggle').addEventListener('click', () => live.toggle());
+      $('b-copy').addEventListener('click', async () => {
+        const html = snippet.textContent;
+        try {
+          await navigator.clipboard.writeText(html);
+          const btn = $('b-copy');
+          const label = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => (btn.textContent = label), 1200);
+        } catch {
+          /* clipboard unavailable; ignore */
+        }
+      });
+
+      apply();
+    </script>
+  </body>
+</html>
