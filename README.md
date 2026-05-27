@@ -59,9 +59,10 @@ page (link the CSS, or `import '@profpowell/blink-wc/style.css'` in a bundler).
 | Attribute        | Type    | Default    | Description                                           |
 | ---------------- | ------- | ---------- | ----------------------------------------------------- |
 | `rate`           | time    | `1s`       | CSS time for one blink cycle                          |
-| `behavior`       | string  | `blink`    | `blink` \| `pulse` \| `flicker`                       |
+| `behavior`       | string  | `blink`    | `blink` \| `pulse` \| `flicker` \| `steps`            |
 | `min-opacity`    | number  | per-mode   | Opacity of the "off" phase (0–1)                      |
 | `count`          | number  | `infinite` | Number of blinks, then stop                           |
+| `steps`          | number  | `2`        | Step count for the multi-step engine (min 2)          |
 | `pause-on-hover` | boolean | —          | Also pauses on `:focus-within`                        |
 | `play-state`     | string  | `running`  | `running` \| `paused`                                 |
 | `reduced-motion` | string  | `respect`  | `respect` \| `ignore`                                 |
@@ -109,6 +110,54 @@ whole words. They honor `prefers-reduced-motion`.
 | ------- | ------------------------------------------------------------------------ |
 | `morse` | Blinks the text out as International Morse code, with a dot/dash caption |
 
+### Step modes
+
+These ride the multi-step engine (see below). Each step of the cycle is its own
+style state, and `--blink-step-ease` morphs smoothly between them.
+
+| Mode       | Description                                                |
+| ---------- | ---------------------------------------------------------- |
+| `extrude`  | An isometric 3D block that punches toward you on-beat      |
+| `collapse` | The text squashes flat, then pops back up                  |
+| `outline`  | Alternates between a solid fill and a hollow outline       |
+| `morph`    | A 4-step showcase — each step its own colour and transform |
+
+## The multi-step engine
+
+A blink doesn't have to be a single on/off toggle. With `behavior="steps"` (or
+any step mode above), the component advances through `N` discrete **steps**
+across one `rate` cycle, setting `data-step="0"`…`data-step="N-1"` in turn. Each
+step is just a CSS state, so it can change colour, transform, outline, glow —
+anything. A plain blink is simply the 2-step case.
+
+```html
+<link rel="stylesheet" href="blink-wc.css" />
+<script type="module" src="blink-wc.js"></script>
+
+<style>
+  /* a custom 3-step traffic light */
+  blink-wc.light {
+    --blink-step-ease: 0.15s;
+  }
+  blink-wc.light[data-step='0'] .blink-content {
+    color: oklch(62% 0.2 25);
+  }
+  blink-wc.light[data-step='1'] .blink-content {
+    color: oklch(80% 0.16 85);
+  }
+  blink-wc.light[data-step='2'] .blink-content {
+    color: oklch(70% 0.18 145);
+  }
+</style>
+
+<blink-wc class="light" behavior="steps" steps="3" rate="3s">●</blink-wc>
+```
+
+`--blink-step-ease` controls the transition between steps: `0s` (default) is a
+hard cut — a true blink; a non-zero value morphs smoothly from one step to the
+next. The step driver freezes when paused, off-screen, or in a hidden tab, and
+rests at step 0 under `prefers-reduced-motion`.
+
 ## API
 
 ```javascript
@@ -120,9 +169,10 @@ el.toggle(); // flip between the two
 el.refresh(); // re-render content after a dynamic change
 
 el.rate; // '1s'  (readonly)
-el.behavior; // 'blink' | 'pulse' | 'flicker'  (readonly)
+el.behavior; // 'blink' | 'pulse' | 'flicker' | 'steps'  (readonly)
+el.steps; // number of steps in the multi-step engine  (readonly)
 el.playState; // 'running' | 'paused'  (readonly)
-el.mode; // active mode preset, e.g. 'neon' | 'morse' | ''  (readonly)
+el.mode; // active mode preset, e.g. 'neon' | 'morse' | 'extrude' | ''  (readonly)
 ```
 
 Set attributes to change configuration (`el.setAttribute('rate', '0.5s')`); the
@@ -145,6 +195,7 @@ blink-wc {
   --blink-rate: 1s; /* duration of one cycle (also set via the `rate` attr) */
   --blink-min-opacity: 0; /* opacity of the "off" phase */
   --blink-stagger: 0.08s; /* per-unit delay step for letter modes */
+  --blink-step-ease: 0s; /* transition between steps (0 = hard cut) */
   --blink-dot: 170; /* Morse dot unit, in ms */
   --blink-bg: …; /* themed-variant background */
   --blink-fg: …; /* themed-variant foreground */

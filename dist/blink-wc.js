@@ -7,7 +7,7 @@ const y = [
   "glitch",
   "cascade",
   "typewriter"
-], p = {
+], g = ["extrude", "collapse", "outline", "morph"], k = { morph: 4 }, p = {
   a: ".-",
   b: "-...",
   c: "-.-.",
@@ -59,13 +59,14 @@ const y = [
   "-": "-....-",
   "@": ".--.-."
 };
-class g extends HTMLElement {
+class v extends HTMLElement {
   static get observedAttributes() {
     return [
       "rate",
       "behavior",
       "min-opacity",
       "count",
+      "steps",
       "play-state",
       "pause-on-hover",
       "reduced-motion",
@@ -79,7 +80,7 @@ class g extends HTMLElement {
   }
   get behavior() {
     const t = this.getAttribute("behavior");
-    return t === "pulse" || t === "flicker" ? t : "blink";
+    return ["pulse", "flicker", "steps"].includes(t) ? t : "blink";
   }
   get minOpacity() {
     const t = this.getAttribute("min-opacity");
@@ -87,6 +88,10 @@ class g extends HTMLElement {
   }
   get count() {
     return this.getAttribute("count") || "infinite";
+  }
+  get steps() {
+    const t = parseInt(this.getAttribute("steps"), 10);
+    return Number.isFinite(t) && t >= 2 ? t : k[this.mode] || 2;
   }
   get playState() {
     return this.getAttribute("play-state") || "running";
@@ -103,7 +108,7 @@ class g extends HTMLElement {
   }
   disconnectedCallback() {
     var t, e;
-    (t = this._intersectionObserver) == null || t.disconnect(), (e = this._content) == null || e.removeEventListener("animationiteration", this._onIteration), document.removeEventListener("visibilitychange", this._onVisibility), this._stopMorse();
+    (t = this._intersectionObserver) == null || t.disconnect(), (e = this._content) == null || e.removeEventListener("animationiteration", this._onIteration), document.removeEventListener("visibilitychange", this._onVisibility), this._stopMorse(), this._stopSteps();
   }
   attributeChangedCallback(t, e, s) {
     e === s || !this._built || ((t === "mode" || t === "unit") && this._renderContent(), this._update(), t === "play-state" && this._dispatch(s === "paused" ? "blink-pause" : "blink-start"));
@@ -137,26 +142,26 @@ class g extends HTMLElement {
   _splitLetters() {
     const t = document.createTreeWalker(this._content, NodeFilter.SHOW_TEXT), e = [];
     for (; t.nextNode(); ) e.push(t.currentNode);
-    const s = this.unit === "word", r = this.mode === "twinkle" || this.mode === "sparkle", h = (i) => i.trim() === "";
-    let o = 0;
+    const s = this.unit === "word", r = this.mode === "twinkle" || this.mode === "sparkle", o = (i) => i.trim() === "";
+    let n = 0;
     for (const i of e) {
-      const a = document.createDocumentFragment(), u = s ? this._tokenizeWords(i.textContent) : [...i.textContent];
-      for (const c of u) {
-        if (c === "") continue;
-        const l = h(c), n = document.createElement("span");
-        n.className = "blink-char", n.style.setProperty("--i", o++), r && (n.style.setProperty("--rate", `${(0.4 + Math.random() * 1.6).toFixed(2)}s`), n.style.setProperty("--delay", `${Math.random().toFixed(2)}s`)), l ? (n.classList.add("blink-space"), n.textContent = " ") : n.textContent = c, a.appendChild(n);
+      const a = document.createDocumentFragment(), c = s ? this._tokenizeWords(i.textContent) : [...i.textContent];
+      for (const l of c) {
+        if (l === "") continue;
+        const u = o(l), h = document.createElement("span");
+        h.className = "blink-char", h.style.setProperty("--i", n++), r && (h.style.setProperty("--rate", `${(0.4 + Math.random() * 1.6).toFixed(2)}s`), h.style.setProperty("--delay", `${Math.random().toFixed(2)}s`)), u ? (h.classList.add("blink-space"), h.textContent = " ") : h.textContent = l, a.appendChild(h);
       }
       i.replaceWith(a);
     }
-    this._content.style.setProperty("--n", o);
+    this._content.style.setProperty("--n", n);
   }
   // Split text into word and whitespace-run tokens (no regex escapes needed).
   _tokenizeWords(t) {
     const e = [];
     let s = "", r = null;
-    for (const h of t) {
-      const o = h.trim() === "";
-      s !== "" && o !== r && (e.push(s), s = ""), s += h, r = o;
+    for (const o of t) {
+      const n = o.trim() === "";
+      s !== "" && n !== r && (e.push(s), s = ""), s += o, r = n;
     }
     return s !== "" && e.push(s), e;
   }
@@ -170,12 +175,12 @@ class g extends HTMLElement {
   // morse mode: blink the text out as Morse code. CSS keys off data-lit to light
   // the text; we also expose the dot/dash string via data-morse for a caption.
   _syncMorse() {
-    var c;
+    var l;
     if (this._stopMorse(), this.mode !== "morse") {
       delete this.dataset.lit, delete this.dataset.morse;
       return;
     }
-    const t = (((c = this._content) == null ? void 0 : c.textContent) || "").trim();
+    const t = (((l = this._content) == null ? void 0 : l.textContent) || "").trim();
     if (this.dataset.morse = this._toMorse(t), this.getAttribute("reduced-motion") !== "ignore" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
       this.dataset.lit = "true";
       return;
@@ -185,38 +190,38 @@ class g extends HTMLElement {
       this.dataset.lit = "true";
       return;
     }
-    const r = parseFloat(getComputedStyle(this).getPropertyValue("--blink-dot")), h = Number.isFinite(r) && r > 0 ? r : 170, o = s.reduce((l, n) => l + n.dur, 0) + 7;
+    const r = parseFloat(getComputedStyle(this).getPropertyValue("--blink-dot")), o = Number.isFinite(r) && r > 0 ? r : 170, n = s.reduce((u, h) => u + h.dur, 0) + 7;
     let i = 0, a = null;
-    const u = (l) => {
-      this._morseRAF = requestAnimationFrame(u), a == null && (a = l);
-      const n = l - a;
-      if (a = l, this._isPaused()) return;
-      i += n;
-      const _ = i / h % o;
-      let b = 0, m = !1;
+    const c = (u) => {
+      this._morseRAF = requestAnimationFrame(c), a == null && (a = u);
+      const h = u - a;
+      if (a = u, this._isPaused()) return;
+      i += h;
+      const f = i / o % n;
+      let m = 0, b = !1;
       for (const d of s) {
-        if (_ < b + d.dur) {
-          m = d.lit;
+        if (f < m + d.dur) {
+          b = d.lit;
           break;
         }
-        b += d.dur;
+        m += d.dur;
       }
-      const f = m ? "true" : "false";
-      this.dataset.lit !== f && (this.dataset.lit = f);
+      const _ = b ? "true" : "false";
+      this.dataset.lit !== _ && (this.dataset.lit = _);
     };
-    this.dataset.lit = "false", this._morseRAF = requestAnimationFrame(u);
+    this.dataset.lit = "false", this._morseRAF = requestAnimationFrame(c);
   }
   // Build an on/off timeline (durations in Morse "units") for a string.
   _morseSegments(t) {
     const e = [], s = t.toLowerCase().split(/\s+/).filter(Boolean);
-    return s.forEach((r, h) => {
-      const o = [...r].filter((i) => p[i]);
-      o.forEach((i, a) => {
-        const u = p[i];
-        [...u].forEach((c, l) => {
-          e.push({ lit: !0, dur: c === "-" ? 3 : 1 }), l < u.length - 1 && e.push({ lit: !1, dur: 1 });
-        }), a < o.length - 1 && e.push({ lit: !1, dur: 3 });
-      }), h < s.length - 1 && e.push({ lit: !1, dur: 7 });
+    return s.forEach((r, o) => {
+      const n = [...r].filter((i) => p[i]);
+      n.forEach((i, a) => {
+        const c = p[i];
+        [...c].forEach((l, u) => {
+          e.push({ lit: !0, dur: l === "-" ? 3 : 1 }), u < c.length - 1 && e.push({ lit: !1, dur: 1 });
+        }), a < n.length - 1 && e.push({ lit: !1, dur: 3 });
+      }), o < s.length - 1 && e.push({ lit: !1, dur: 7 });
     }), e;
   }
   // Human-readable dot/dash string, words separated by " / ".
@@ -236,14 +241,54 @@ class g extends HTMLElement {
     }, document.addEventListener("visibilitychange", this._onVisibility), this.dataset.tabVisible = String(!document.hidden), this._onIteration = () => this._dispatch("blink-cycle"), this._content.addEventListener("animationiteration", this._onIteration);
   }
   _update() {
-    !this._built && !this._content || (this.dataset.behavior = this.behavior, this.dataset.state = this.playState, this.dataset.ready = "", this.style.setProperty("--blink-rate", this.rate), this.minOpacity != null ? this.style.setProperty("--blink-min-opacity", this.minOpacity) : this.style.removeProperty("--blink-min-opacity"), this.count !== "infinite" ? this.style.setProperty("--blink-count", this.count) : this.style.removeProperty("--blink-count"), this._syncMorse());
+    !this._built && !this._content || (this.dataset.behavior = this.behavior, this.dataset.state = this.playState, this.dataset.ready = "", this.style.setProperty("--blink-rate", this.rate), this.minOpacity != null ? this.style.setProperty("--blink-min-opacity", this.minOpacity) : this.style.removeProperty("--blink-min-opacity"), this.count !== "infinite" ? this.style.setProperty("--blink-count", this.count) : this.style.removeProperty("--blink-count"), this._syncMorse(), this._syncSteps());
+  }
+  // Whether the multi-step engine should drive this element.
+  _usesSteps() {
+    return this.behavior === "steps" || g.includes(this.mode);
+  }
+  // Parse a CSS time (e.g. "1s", "800ms", or a bare number of seconds) to ms.
+  _parseTime(t) {
+    const e = String(t).trim();
+    let s;
+    return e.endsWith("ms") ? s = parseFloat(e) : (e.endsWith("s"), s = parseFloat(e) * 1e3), Number.isFinite(s) && s > 0 ? s : 1e3;
+  }
+  _stopSteps() {
+    this._stepRAF && cancelAnimationFrame(this._stepRAF), this._stepRAF = null;
+  }
+  // Multi-step engine: advance data-step="0..N-1" across one cycle (`rate`),
+  // holding each step for an equal slice. CSS styles each step, so a step can
+  // change colour, transform, outline, etc. — a plain blink is the 2-step case.
+  // Freezes when paused/off-screen/tab-hidden; rests at step 0 under reduced motion.
+  _syncSteps() {
+    if (this._stopSteps(), !this._usesSteps()) {
+      delete this.dataset.step;
+      return;
+    }
+    const t = this.steps;
+    if (this.getAttribute("reduced-motion") !== "ignore" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.dataset.step = "0";
+      return;
+    }
+    const s = this._parseTime(this.rate) / t;
+    let r = 0, o = null, n = 0;
+    this.dataset.step = "0";
+    const i = (a) => {
+      this._stepRAF = requestAnimationFrame(i), o == null && (o = a);
+      const c = a - o;
+      if (o = a, this._isPaused()) return;
+      r += c;
+      const l = Math.floor(r / s) % t;
+      l !== n && (this.dataset.step = String(l), l < n && this._dispatch("blink-cycle"), n = l);
+    };
+    this._stepRAF = requestAnimationFrame(i);
   }
   _dispatch(t) {
     this.dispatchEvent(new CustomEvent(t, { bubbles: !0 }));
   }
 }
-customElements.define("blink-wc", g);
+customElements.define("blink-wc", v);
 export {
-  g as BlinkWc
+  v as BlinkWc
 };
 //# sourceMappingURL=blink-wc.js.map

@@ -99,10 +99,12 @@ blink-wc[data-behavior='flicker'] .blink-content {
   animation: blink-wc-flicker var(--blink-rate, 1s) step-end var(--blink-count, infinite);
 }
 
-/* Per-unit and morse modes drive their own animation — silence the whole-text
-   blink on the content. (Placed after the behavior rules so it wins the tie.) */
+/* Per-unit, morse, and step modes drive their own animation/state — silence the
+   whole-text blink on the content. (Placed after the behavior rules so it wins
+   the tie.) */
 blink-wc[data-split] .blink-content,
-blink-wc[mode='morse'] .blink-content {
+blink-wc[mode='morse'] .blink-content,
+blink-wc[data-step] .blink-content {
   animation: none;
 }
 
@@ -131,6 +133,10 @@ blink-wc[pause-on-hover] {
   blink-wc:not([reduced-motion='ignore']) :is(.blink-content, .blink-char) {
     animation: none !important;
     opacity: 1 !important;
+  }
+  /* Step modes rest at step 0; force the resting transform flat as well. */
+  blink-wc:not([reduced-motion='ignore'])[data-step] .blink-content {
+    transform: none !important;
   }
   blink-wc:not([reduced-motion='ignore'])[mode='morse'] .blink-content {
     opacity: 1 !important;
@@ -428,4 +434,106 @@ blink-wc[mode='typewriter'] .blink-content::after {
   margin-inline-start: 0.05em;
   color: var(--color-accent, currentColor);
   animation: blink-wc-blink var(--blink-rate, 1s) step-end infinite;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Multi-step engine
+ *
+ * The JS advances data-step="0..N-1" across one cycle, holding each step for an
+ * equal slice. Each step is just a CSS state, so a step can change colour,
+ * transform, outline, glow — anything. A plain on/off blink is the 2-step case.
+ *
+ * --blink-step-ease controls the transition *between* steps: 0s (default) is a
+ * hard cut (true blink); a non-zero value morphs smoothly from one step to the
+ * next (collapse, extrude, morph). Authors can target their own steps with
+ * `blink-wc[data-step='K'] .blink-content { … }`.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+blink-wc[data-step] .blink-content {
+  display: inline-block;
+  transition:
+    opacity var(--blink-step-ease, 0s) linear,
+    color var(--blink-step-ease, 0s) linear,
+    transform var(--blink-step-ease, 0s) ease,
+    text-shadow var(--blink-step-ease, 0s) linear,
+    letter-spacing var(--blink-step-ease, 0s) ease,
+    -webkit-text-stroke-color var(--blink-step-ease, 0s) linear;
+}
+
+/* Default two-state: behavior="steps" with no preset is a plain blink. */
+blink-wc[behavior='steps'][data-step='1'] .blink-content {
+  opacity: var(--blink-min-opacity, 0);
+}
+
+/* ─── extrude — an isometric 3D block that punches toward you on-beat ───── */
+blink-wc[mode='extrude'] {
+  --blink-step-ease: 0.18s;
+  --_ext: var(--blink-shadow, var(--color-primary, oklch(45% 0.06 250)));
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  color: var(--blink-fg, var(--color-accent, oklch(72% 0.18 255)));
+  perspective: 600px;
+}
+blink-wc[mode='extrude'] .blink-content {
+  transform-origin: center;
+}
+blink-wc[mode='extrude'][data-step='1'] .blink-content {
+  transform: scale(1.14) translateY(-0.04em);
+  text-shadow:
+    0.025em 0.025em var(--_ext),
+    0.05em 0.05em var(--_ext),
+    0.075em 0.075em var(--_ext),
+    0.1em 0.1em var(--_ext),
+    0.125em 0.125em var(--_ext),
+    0.15em 0.15em color-mix(in oklch, var(--_ext), black 35%);
+}
+
+/* ─── collapse — the text squashes flat, then pops back up ─────────────── */
+blink-wc[mode='collapse'] {
+  --blink-step-ease: 0.12s;
+  font-weight: 800;
+}
+blink-wc[mode='collapse'] .blink-content {
+  transform-origin: center bottom;
+}
+blink-wc[mode='collapse'][data-step='1'] .blink-content {
+  transform: scaleY(0.06) scaleX(1.12);
+  opacity: 0.6;
+}
+
+/* ─── outline — alternates between a solid fill and a hollow outline ───── */
+blink-wc[mode='outline'] {
+  --blink-step-ease: 0.12s;
+  --_stroke: var(--blink-fg, var(--color-accent, oklch(60% 0.2 285)));
+  font-weight: 900;
+  color: var(--_stroke);
+}
+blink-wc[mode='outline'][data-step='1'] .blink-content {
+  color: transparent;
+  -webkit-text-stroke: 0.035em var(--_stroke);
+}
+
+/* ─── morph — a 4-step showcase: each step its own colour + transform ──── */
+blink-wc[mode='morph'] {
+  --blink-step-ease: 0.16s;
+  font-weight: 900;
+}
+blink-wc[mode='morph'][data-step='0'] .blink-content {
+  color: var(--color-accent, oklch(65% 0.2 20));
+  transform: scale(1);
+}
+blink-wc[mode='morph'][data-step='1'] .blink-content {
+  color: var(--color-success, oklch(70% 0.18 145));
+  transform: scale(1.1) rotate(-2deg);
+}
+blink-wc[mode='morph'][data-step='2'] .blink-content {
+  color: var(--color-warning, oklch(78% 0.16 85));
+  transform: scale(0.92) rotate(2deg);
+  letter-spacing: 0.06em;
+}
+blink-wc[mode='morph'][data-step='3'] .blink-content {
+  color: var(--color-primary, oklch(60% 0.2 285));
+  transform: scale(1.06);
+  text-shadow: 0 0 0.5em currentColor;
 }

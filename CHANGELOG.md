@@ -4,6 +4,28 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-05-27
+
+### Added
+
+- **Multi-step engine** (`behavior="steps"`) — instead of a single on/off
+  toggle, the blink advances through `N` discrete steps across one cycle, and
+  each step is its own CSS state (colour, transform, outline, glow — anything).
+  A plain blink is simply the 2-step case. The `steps` attribute sets the count
+  (min 2). Driven by a `requestAnimationFrame` loop that freezes when paused/
+  off-screen/tab-hidden and rests at step 0 under `prefers-reduced-motion`.
+  Authors style their own steps with `blink-wc[data-step='K'] .blink-content`.
+- **`--blink-step-ease`** — controls the transition _between_ steps: `0s`
+  (default) is a hard cut (true blink); a non-zero value morphs smoothly.
+- **Four step-based preset modes:**
+  - `extrude` — an isometric 3D block that punches toward you on-beat (a growing
+    stack of offset text-shadows plus a scale).
+  - `collapse` — the text squashes flat, then pops back up.
+  - `outline` — alternates between a solid fill and a hollow `-webkit-text-stroke`.
+  - `morph` — a 4-step showcase, each step its own colour and transform.
+- `steps` getter and `'steps'` added to the `BlinkBehavior` type; the new modes
+  added to `BlinkMode`.
+
 ## [1.0.0] — 2026-05-27
 
 ### Added

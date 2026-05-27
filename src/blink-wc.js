@@ -36,6 +36,13 @@ const LETTER_MODES = [
   'typewriter',
 ];
 
+// Modes driven by the multi-step engine: JS advances data-step="0..N-1" across
+// the cycle and CSS styles each step. A plain blink is just the 2-step case.
+const STEP_MODES = ['extrude', 'collapse', 'outline', 'morph'];
+
+// Default step count per step-mode (overridable with the `steps` attribute).
+const STEP_COUNTS = { morph: 4 };
+
 // International Morse code, plus digits and a little punctuation.
 const MORSE = {
   a: '.-',
@@ -97,6 +104,7 @@ class BlinkWc extends HTMLElement {
       'behavior',
       'min-opacity',
       'count',
+      'steps',
       'play-state',
       'pause-on-hover',
       'reduced-motion',
@@ -111,7 +119,7 @@ class BlinkWc extends HTMLElement {
   }
   get behavior() {
     const b = this.getAttribute('behavior');
-    return b === 'pulse' || b === 'flicker' ? b : 'blink';
+    return ['pulse', 'flicker', 'steps'].includes(b) ? b : 'blink';
   }
   get minOpacity() {
     const v = this.getAttribute('min-opacity');
@@ -119,6 +127,11 @@ class BlinkWc extends HTMLElement {
   }
   get count() {
     return this.getAttribute('count') || 'infinite';
+  }
+  get steps() {
+    const v = parseInt(this.getAttribute('steps'), 10);
+    if (Number.isFinite(v) && v >= 2) return v;
+    return STEP_COUNTS[this.mode] || 2;
   }
   get playState() {
     return this.getAttribute('play-state') || 'running';
@@ -145,6 +158,7 @@ class BlinkWc extends HTMLElement {
     this._content?.removeEventListener('animationiteration', this._onIteration);
     document.removeEventListener('visibilitychange', this._onVisibility);
     this._stopMorse();
+    this._stopSteps();
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -405,6 +419,70 @@ class BlinkWc extends HTMLElement {
     }
 
     this._syncMorse();
+    this._syncSteps();
+  }
+
+  // Whether the multi-step engine should drive this element.
+  _usesSteps() {
+    return this.behavior === 'steps' || STEP_MODES.includes(this.mode);
+  }
+
+  // Parse a CSS time (e.g. "1s", "800ms", or a bare number of seconds) to ms.
+  _parseTime(value) {
+    const t = String(value).trim();
+    let ms;
+    if (t.endsWith('ms')) ms = parseFloat(t);
+    else if (t.endsWith('s')) ms = parseFloat(t) * 1000;
+    else ms = parseFloat(t) * 1000;
+    return Number.isFinite(ms) && ms > 0 ? ms : 1000;
+  }
+
+  _stopSteps() {
+    if (this._stepRAF) cancelAnimationFrame(this._stepRAF);
+    this._stepRAF = null;
+  }
+
+  // Multi-step engine: advance data-step="0..N-1" across one cycle (`rate`),
+  // holding each step for an equal slice. CSS styles each step, so a step can
+  // change colour, transform, outline, etc. — a plain blink is the 2-step case.
+  // Freezes when paused/off-screen/tab-hidden; rests at step 0 under reduced motion.
+  _syncSteps() {
+    this._stopSteps();
+    if (!this._usesSteps()) {
+      delete this.dataset.step;
+      return;
+    }
+
+    const n = this.steps;
+
+    const reduce =
+      this.getAttribute('reduced-motion') !== 'ignore' &&
+      matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      this.dataset.step = '0';
+      return;
+    }
+
+    const per = this._parseTime(this.rate) / n; // ms per step
+    let elapsed = 0;
+    let lastT = null;
+    let prev = 0;
+    this.dataset.step = '0';
+    const tick = (t) => {
+      this._stepRAF = requestAnimationFrame(tick);
+      if (lastT == null) lastT = t;
+      const dt = t - lastT;
+      lastT = t;
+      if (this._isPaused()) return; // freeze the timeline while paused
+      elapsed += dt;
+      const idx = Math.floor(elapsed / per) % n;
+      if (idx !== prev) {
+        this.dataset.step = String(idx);
+        if (idx < prev) this._dispatch('blink-cycle'); // wrapped back to the start
+        prev = idx;
+      }
+    };
+    this._stepRAF = requestAnimationFrame(tick);
   }
 
   _dispatch(name) {

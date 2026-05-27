@@ -161,6 +161,47 @@ test.describe('Morse mode', () => {
   });
 });
 
+test.describe('Step engine', () => {
+  test('mode="extrude" cycles data-step between 0 and 1', async ({ page }) => {
+    const el = page.locator('#extrude');
+    await el.scrollIntoViewIfNeeded();
+    await expect(el).toHaveAttribute('data-step', /[01]/);
+    // The driver advances the step over time.
+    await expect
+      .poll(() => page.evaluate(() => document.getElementById('extrude').dataset.step === '1'), {
+        timeout: 5000,
+      })
+      .toBe(true);
+    // It does not split into per-letter spans.
+    expect(await el.locator('.blink-char').count()).toBe(0);
+  });
+
+  test('morph defaults to 4 steps and reports it via the getter', async ({ page }) => {
+    await page.locator('#morph').scrollIntoViewIfNeeded();
+    const steps = await page.evaluate(() => document.getElementById('morph').steps);
+    expect(steps).toBe(4);
+    // It eventually reaches the highest step index (3).
+    await expect
+      .poll(() => page.evaluate(() => document.getElementById('morph').dataset.step === '3'), {
+        timeout: 5000,
+      })
+      .toBe(true);
+  });
+
+  test('the step driver freezes while paused', async ({ page }) => {
+    await page.evaluate(() => {
+      const el = document.getElementById('extrude');
+      el.scrollIntoView();
+      el.stop();
+    });
+    await page.waitForTimeout(150);
+    const a = await page.evaluate(() => document.getElementById('extrude').dataset.step);
+    await page.waitForTimeout(600);
+    const b = await page.evaluate(() => document.getElementById('extrude').dataset.step);
+    expect(a).toBe(b);
+  });
+});
+
 test.describe('Accessibility', () => {
   test('respects reduced motion preference (animation disabled)', async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: 'reduce' });

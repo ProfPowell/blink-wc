@@ -4,13 +4,15 @@
  * CSS-driven, and Vanilla Breeze design-token aware.
  */
 
-export type BlinkBehavior = 'blink' | 'pulse' | 'flicker';
+export type BlinkBehavior = 'blink' | 'pulse' | 'flicker' | 'steps';
 export type BlinkPlayState = 'running' | 'paused';
 export type BlinkReducedMotion = 'respect' | 'ignore';
 
 /**
- * Visual/motion preset. Surface themes style the container; letter modes
- * split the text and animate each unit; `morse` blinks the text out in code.
+ * Visual/motion preset. Surface themes style the container; letter modes split
+ * the text and animate each unit; `morse` blinks the text out in code; the
+ * step modes (`extrude`, `collapse`, `outline`, `morph`) ride the multi-step
+ * engine, giving each step of the cycle its own style.
  */
 export type BlinkMode =
   | ''
@@ -29,7 +31,11 @@ export type BlinkMode =
   | 'chase'
   | 'glitch'
   | 'cascade'
-  | 'typewriter';
+  | 'typewriter'
+  | 'extrude'
+  | 'collapse'
+  | 'outline'
+  | 'morph';
 
 /** Granularity for the per-unit motion modes. */
 export type BlinkUnit = 'letter' | 'word';
@@ -51,6 +57,8 @@ export declare class BlinkWc extends HTMLElement {
   get minOpacity(): string | null;
   /** Iteration count, or `infinite`. Attribute: `count`. Default `infinite`. */
   get count(): string;
+  /** Number of steps in the multi-step engine (min 2). Attribute: `steps`. */
+  get steps(): number;
   /** Playback state. Attribute: `play-state`. Default `running`. */
   get playState(): BlinkPlayState;
   /** Active visual/motion preset. Attribute: `mode`. Default `''` (none). */
