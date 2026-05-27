@@ -4,6 +4,26 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-05-27
+
+### Added
+
+- **Five more per-unit motion modes:**
+  - `zoom` — each letter swells toward you and fades, in a staggered ripple.
+  - `flip3d` — a split-flap board: each letter tumbles a full turn on the X axis.
+  - `swing` — letters dangle and swing like pendulums from their top edge.
+  - `shake` — a nervous jitter with a blink, each letter slightly out of phase.
+  - `heartbeat` — a double-thump scale pulse rippling across the letters.
+- **Two true-3D step modes:**
+  - `depth` — a perspective + `translateZ` punch toward the viewer.
+  - `revolve` — a 4-step turn on the Y axis that flips to the back and around.
+- **`decode` mode** — units flicker through random glyphs (Matrix-style) and then
+  lock onto their real character, staggered left-to-right, then re-scramble on a
+  loop. Driven by a `requestAnimationFrame` loop that freezes when paused/
+  off-screen/tab-hidden and shows the plain text under `prefers-reduced-motion`.
+  Works per letter or per word (`unit="word"`).
+- New modes added to the `BlinkMode` TypeScript union.
+
 ## [1.1.0] — 2026-05-27
 
 ### Added

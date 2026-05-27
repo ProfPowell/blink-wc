@@ -1,4 +1,4 @@
-const y = [
+const g = [
   "wave",
   "twinkle",
   "sparkle",
@@ -6,8 +6,14 @@ const y = [
   "chase",
   "glitch",
   "cascade",
-  "typewriter"
-], g = ["extrude", "collapse", "outline", "morph"], k = { morph: 4 }, p = {
+  "typewriter",
+  "zoom",
+  "flip3d",
+  "swing",
+  "shake",
+  "heartbeat",
+  "decode"
+], A = ["extrude", "collapse", "outline", "morph", "depth", "revolve"], k = { morph: 4, revolve: 4 }, y = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+=?<>/~^|", b = {
   a: ".-",
   b: "-...",
   c: "-.-.",
@@ -108,7 +114,7 @@ class v extends HTMLElement {
   }
   disconnectedCallback() {
     var t, e;
-    (t = this._intersectionObserver) == null || t.disconnect(), (e = this._content) == null || e.removeEventListener("animationiteration", this._onIteration), document.removeEventListener("visibilitychange", this._onVisibility), this._stopMorse(), this._stopSteps();
+    (t = this._intersectionObserver) == null || t.disconnect(), (e = this._content) == null || e.removeEventListener("animationiteration", this._onIteration), document.removeEventListener("visibilitychange", this._onVisibility), this._stopMorse(), this._stopSteps(), this._stopDecode();
   }
   attributeChangedCallback(t, e, s) {
     e === s || !this._built || ((t === "mode" || t === "unit") && this._renderContent(), this._update(), t === "play-state" && this._dispatch(s === "paused" ? "blink-pause" : "blink-start"));
@@ -135,33 +141,33 @@ class v extends HTMLElement {
   }
   // Restore authored markup, then split into letters if the mode needs it.
   _renderContent() {
-    this._sourceHTML != null && (this._content.innerHTML = this._sourceHTML, y.includes(this.mode) ? (this._splitLetters(), this.dataset.split = "") : delete this.dataset.split);
+    this._sourceHTML != null && (this._content.innerHTML = this._sourceHTML, g.includes(this.mode) ? (this._splitLetters(), this.dataset.split = "") : delete this.dataset.split);
   }
   // Wrap each character in a <span class="blink-char"> with a stagger index, so
   // CSS can animate units individually (wave, twinkle, sparkle, chase, …).
   _splitLetters() {
     const t = document.createTreeWalker(this._content, NodeFilter.SHOW_TEXT), e = [];
     for (; t.nextNode(); ) e.push(t.currentNode);
-    const s = this.unit === "word", r = this.mode === "twinkle" || this.mode === "sparkle", o = (i) => i.trim() === "";
-    let n = 0;
+    const s = this.unit === "word", a = this.mode === "twinkle" || this.mode === "sparkle", l = this.mode === "decode", c = (i) => i.trim() === "";
+    let h = 0;
     for (const i of e) {
-      const a = document.createDocumentFragment(), c = s ? this._tokenizeWords(i.textContent) : [...i.textContent];
-      for (const l of c) {
-        if (l === "") continue;
-        const u = o(l), h = document.createElement("span");
-        h.className = "blink-char", h.style.setProperty("--i", n++), r && (h.style.setProperty("--rate", `${(0.4 + Math.random() * 1.6).toFixed(2)}s`), h.style.setProperty("--delay", `${Math.random().toFixed(2)}s`)), u ? (h.classList.add("blink-space"), h.textContent = " ") : h.textContent = l, a.appendChild(h);
+      const u = document.createDocumentFragment(), n = s ? this._tokenizeWords(i.textContent) : [...i.textContent];
+      for (const r of n) {
+        if (r === "") continue;
+        const m = c(r), d = document.createElement("span");
+        d.className = "blink-char", d.style.setProperty("--i", h++), a && (d.style.setProperty("--rate", `${(0.4 + Math.random() * 1.6).toFixed(2)}s`), d.style.setProperty("--delay", `${Math.random().toFixed(2)}s`)), m ? (d.classList.add("blink-space"), d.textContent = " ") : (d.textContent = r, l && (d.dataset.ch = r)), u.appendChild(d);
       }
-      i.replaceWith(a);
+      i.replaceWith(u);
     }
-    this._content.style.setProperty("--n", n);
+    this._content.style.setProperty("--n", h);
   }
   // Split text into word and whitespace-run tokens (no regex escapes needed).
   _tokenizeWords(t) {
     const e = [];
-    let s = "", r = null;
-    for (const o of t) {
-      const n = o.trim() === "";
-      s !== "" && n !== r && (e.push(s), s = ""), s += o, r = n;
+    let s = "", a = null;
+    for (const l of t) {
+      const c = l.trim() === "";
+      s !== "" && c !== a && (e.push(s), s = ""), s += l, a = c;
     }
     return s !== "" && e.push(s), e;
   }
@@ -175,12 +181,12 @@ class v extends HTMLElement {
   // morse mode: blink the text out as Morse code. CSS keys off data-lit to light
   // the text; we also expose the dot/dash string via data-morse for a caption.
   _syncMorse() {
-    var l;
+    var n;
     if (this._stopMorse(), this.mode !== "morse") {
       delete this.dataset.lit, delete this.dataset.morse;
       return;
     }
-    const t = (((l = this._content) == null ? void 0 : l.textContent) || "").trim();
+    const t = (((n = this._content) == null ? void 0 : n.textContent) || "").trim();
     if (this.dataset.morse = this._toMorse(t), this.getAttribute("reduced-motion") !== "ignore" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
       this.dataset.lit = "true";
       return;
@@ -190,44 +196,44 @@ class v extends HTMLElement {
       this.dataset.lit = "true";
       return;
     }
-    const r = parseFloat(getComputedStyle(this).getPropertyValue("--blink-dot")), o = Number.isFinite(r) && r > 0 ? r : 170, n = s.reduce((u, h) => u + h.dur, 0) + 7;
-    let i = 0, a = null;
-    const c = (u) => {
-      this._morseRAF = requestAnimationFrame(c), a == null && (a = u);
-      const h = u - a;
-      if (a = u, this._isPaused()) return;
-      i += h;
-      const f = i / o % n;
-      let m = 0, b = !1;
-      for (const d of s) {
-        if (f < m + d.dur) {
-          b = d.lit;
+    const a = parseFloat(getComputedStyle(this).getPropertyValue("--blink-dot")), l = Number.isFinite(a) && a > 0 ? a : 170, c = s.reduce((r, m) => r + m.dur, 0) + 7;
+    let h = 0, i = null;
+    const u = (r) => {
+      this._morseRAF = requestAnimationFrame(u), i == null && (i = r);
+      const m = r - i;
+      if (i = r, this._isPaused()) return;
+      h += m;
+      const d = h / l % c;
+      let o = 0, _ = !1;
+      for (const p of s) {
+        if (d < o + p.dur) {
+          _ = p.lit;
           break;
         }
-        m += d.dur;
+        o += p.dur;
       }
-      const _ = b ? "true" : "false";
-      this.dataset.lit !== _ && (this.dataset.lit = _);
+      const f = _ ? "true" : "false";
+      this.dataset.lit !== f && (this.dataset.lit = f);
     };
-    this.dataset.lit = "false", this._morseRAF = requestAnimationFrame(c);
+    this.dataset.lit = "false", this._morseRAF = requestAnimationFrame(u);
   }
   // Build an on/off timeline (durations in Morse "units") for a string.
   _morseSegments(t) {
     const e = [], s = t.toLowerCase().split(/\s+/).filter(Boolean);
-    return s.forEach((r, o) => {
-      const n = [...r].filter((i) => p[i]);
-      n.forEach((i, a) => {
-        const c = p[i];
-        [...c].forEach((l, u) => {
-          e.push({ lit: !0, dur: l === "-" ? 3 : 1 }), u < c.length - 1 && e.push({ lit: !1, dur: 1 });
-        }), a < n.length - 1 && e.push({ lit: !1, dur: 3 });
-      }), o < s.length - 1 && e.push({ lit: !1, dur: 7 });
+    return s.forEach((a, l) => {
+      const c = [...a].filter((h) => b[h]);
+      c.forEach((h, i) => {
+        const u = b[h];
+        [...u].forEach((n, r) => {
+          e.push({ lit: !0, dur: n === "-" ? 3 : 1 }), r < u.length - 1 && e.push({ lit: !1, dur: 1 });
+        }), i < c.length - 1 && e.push({ lit: !1, dur: 3 });
+      }), l < s.length - 1 && e.push({ lit: !1, dur: 7 });
     }), e;
   }
   // Human-readable dot/dash string, words separated by " / ".
   _toMorse(t) {
     return t.toLowerCase().split(/\s+/).filter(Boolean).map(
-      (e) => [...e].map((s) => p[s] || "").filter(Boolean).join(" ")
+      (e) => [...e].map((s) => b[s] || "").filter(Boolean).join(" ")
     ).filter(Boolean).join(" / ");
   }
   _observe() {
@@ -241,11 +247,48 @@ class v extends HTMLElement {
     }, document.addEventListener("visibilitychange", this._onVisibility), this.dataset.tabVisible = String(!document.hidden), this._onIteration = () => this._dispatch("blink-cycle"), this._content.addEventListener("animationiteration", this._onIteration);
   }
   _update() {
-    !this._built && !this._content || (this.dataset.behavior = this.behavior, this.dataset.state = this.playState, this.dataset.ready = "", this.style.setProperty("--blink-rate", this.rate), this.minOpacity != null ? this.style.setProperty("--blink-min-opacity", this.minOpacity) : this.style.removeProperty("--blink-min-opacity"), this.count !== "infinite" ? this.style.setProperty("--blink-count", this.count) : this.style.removeProperty("--blink-count"), this._syncMorse(), this._syncSteps());
+    !this._built && !this._content || (this.dataset.behavior = this.behavior, this.dataset.state = this.playState, this.dataset.ready = "", this.style.setProperty("--blink-rate", this.rate), this.minOpacity != null ? this.style.setProperty("--blink-min-opacity", this.minOpacity) : this.style.removeProperty("--blink-min-opacity"), this.count !== "infinite" ? this.style.setProperty("--blink-count", this.count) : this.style.removeProperty("--blink-count"), this._syncMorse(), this._syncSteps(), this._syncDecode());
+  }
+  _stopDecode() {
+    this._decodeRAF && cancelAnimationFrame(this._decodeRAF), this._decodeRAF = null;
+  }
+  // decode mode: each unit flickers through random glyphs, then locks onto its
+  // real character (stored in data-ch), staggered left-to-right, then
+  // re-scrambles on a loop. Monospace keeps the width stable as glyphs change.
+  // Freezes when paused; shows the plain text under reduced motion.
+  _syncDecode() {
+    if (this._stopDecode(), this.mode !== "decode") return;
+    const t = [...this.querySelectorAll(".blink-char")].filter(
+      (o) => !o.classList.contains("blink-space") && o.dataset.ch != null
+    );
+    if (t.length === 0) return;
+    if (this.getAttribute("reduced-motion") !== "ignore" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      for (const o of t) o.textContent = o.dataset.ch;
+      return;
+    }
+    const s = () => y[Math.random() * y.length | 0], a = 650, l = 45, c = 1800, h = 55;
+    let i = 0;
+    const u = t.map((o) => {
+      const _ = Number(o.style.getPropertyValue("--i")) || 0, f = a + _ * l;
+      return f > i && (i = f), { s: o, settleAt: f, target: o.dataset.ch };
+    });
+    let n = 0, r = null, m = 0;
+    const d = (o) => {
+      this._decodeRAF = requestAnimationFrame(d), r == null && (r = o);
+      const _ = o - r;
+      if (r = o, this._isPaused()) return;
+      n += _;
+      const f = n - m >= h;
+      f && (m = n);
+      for (const p of u)
+        n >= p.settleAt ? p.s.textContent !== p.target && (p.s.textContent = p.target) : f && (p.s.textContent = s());
+      n > i + c && (n = 0, m = 0);
+    };
+    this._decodeRAF = requestAnimationFrame(d);
   }
   // Whether the multi-step engine should drive this element.
   _usesSteps() {
-    return this.behavior === "steps" || g.includes(this.mode);
+    return this.behavior === "steps" || A.includes(this.mode);
   }
   // Parse a CSS time (e.g. "1s", "800ms", or a bare number of seconds) to ms.
   _parseTime(t) {
@@ -271,17 +314,17 @@ class v extends HTMLElement {
       return;
     }
     const s = this._parseTime(this.rate) / t;
-    let r = 0, o = null, n = 0;
+    let a = 0, l = null, c = 0;
     this.dataset.step = "0";
-    const i = (a) => {
-      this._stepRAF = requestAnimationFrame(i), o == null && (o = a);
-      const c = a - o;
-      if (o = a, this._isPaused()) return;
-      r += c;
-      const l = Math.floor(r / s) % t;
-      l !== n && (this.dataset.step = String(l), l < n && this._dispatch("blink-cycle"), n = l);
+    const h = (i) => {
+      this._stepRAF = requestAnimationFrame(h), l == null && (l = i);
+      const u = i - l;
+      if (l = i, this._isPaused()) return;
+      a += u;
+      const n = Math.floor(a / s) % t;
+      n !== c && (this.dataset.step = String(n), n < c && this._dispatch("blink-cycle"), c = n);
     };
-    this._stepRAF = requestAnimationFrame(i);
+    this._stepRAF = requestAnimationFrame(h);
   }
   _dispatch(t) {
     this.dispatchEvent(new CustomEvent(t, { bubbles: !0 }));

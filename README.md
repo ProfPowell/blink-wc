@@ -103,24 +103,35 @@ whole words. They honor `prefers-reduced-motion`.
 | `glitch`     | Units blink while jittering with a chromatic-aberration shadow |
 | `cascade`    | A soft fade pulse rippling unit-to-unit                        |
 | `typewriter` | Units appear one by one, with a blinking caret at the end      |
+| `zoom`       | Each letter swells toward you and fades, in a staggered ripple |
+| `flip3d`     | Split-flap board — each letter tumbles a full turn on X        |
+| `swing`      | Letters dangle and swing like pendulums                        |
+| `shake`      | A nervous jitter with a blink, slightly out of phase           |
+| `heartbeat`  | A double-thump scale pulse rippling across the letters         |
 
-### Morse
+### Morse &amp; decode
 
-| Mode    | Description                                                              |
-| ------- | ------------------------------------------------------------------------ |
-| `morse` | Blinks the text out as International Morse code, with a dot/dash caption |
+These are JS-driven (a small `requestAnimationFrame` loop); both freeze when
+paused/off-screen/tab-hidden and fall back to plain text under reduced motion.
+
+| Mode     | Description                                                              |
+| -------- | ------------------------------------------------------------------------ |
+| `morse`  | Blinks the text out as International Morse code, with a dot/dash caption |
+| `decode` | Units flicker through random glyphs, then lock onto the real text        |
 
 ### Step modes
 
 These ride the multi-step engine (see below). Each step of the cycle is its own
 style state, and `--blink-step-ease` morphs smoothly between them.
 
-| Mode       | Description                                                |
-| ---------- | ---------------------------------------------------------- |
-| `extrude`  | An isometric 3D block that punches toward you on-beat      |
-| `collapse` | The text squashes flat, then pops back up                  |
-| `outline`  | Alternates between a solid fill and a hollow outline       |
-| `morph`    | A 4-step showcase — each step its own colour and transform |
+| Mode       | Description                                                   |
+| ---------- | ------------------------------------------------------------- |
+| `extrude`  | An isometric 3D block that punches toward you on-beat         |
+| `collapse` | The text squashes flat, then pops back up                     |
+| `outline`  | Alternates between a solid fill and a hollow outline          |
+| `morph`    | A 4-step showcase — each step its own colour and transform    |
+| `depth`    | A true-3D `translateZ` punch toward the viewer                |
+| `revolve`  | A 4-step turn on the Y axis that flips to the back and around |
 
 ## The multi-step engine
 

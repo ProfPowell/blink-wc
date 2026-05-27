@@ -32,10 +32,18 @@ export type BlinkMode =
   | 'glitch'
   | 'cascade'
   | 'typewriter'
+  | 'zoom'
+  | 'flip3d'
+  | 'swing'
+  | 'shake'
+  | 'heartbeat'
+  | 'decode'
   | 'extrude'
   | 'collapse'
   | 'outline'
-  | 'morph';
+  | 'morph'
+  | 'depth'
+  | 'revolve';
 
 /** Granularity for the per-unit motion modes. */
 export type BlinkUnit = 'letter' | 'word';

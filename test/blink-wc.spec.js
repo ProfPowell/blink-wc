@@ -202,6 +202,57 @@ test.describe('Step engine', () => {
   });
 });
 
+test.describe('More motion modes', () => {
+  test('mode="zoom" splits and animates each letter', async ({ page }) => {
+    const el = page.locator('#zoom');
+    await expect(el).toHaveAttribute('data-split', '');
+    const first = el.locator('.blink-char').first();
+    const name = await first.evaluate((node) => getComputedStyle(node).animationName);
+    expect(name).toBe('blink-wc-zoom');
+  });
+
+  test('mode="depth" uses the step engine with a 3D transform', async ({ page }) => {
+    // depth is registered as a step mode (not a per-letter split mode).
+    const info = await page.evaluate(() => {
+      const el = document.getElementById('zoom');
+      el.setAttribute('mode', 'depth');
+      return { split: el.hasAttribute('data-split'), step: el.dataset.step };
+    });
+    expect(info.split).toBe(false);
+    expect(['0', '1']).toContain(info.step);
+  });
+});
+
+test.describe('Decode mode', () => {
+  test('stores targets in data-ch and settles on the real text', async ({ page }) => {
+    const el = page.locator('#decode');
+    await el.scrollIntoViewIfNeeded();
+    await expect(el).toHaveAttribute('data-split', '');
+
+    const sel = '#decode .blink-char';
+    const targetsOk = await page.evaluate(
+      (s) =>
+        [...document.querySelectorAll(s)].every(
+          (c) => c.classList.contains('blink-space') || c.dataset.ch != null
+        ),
+      sel
+    );
+    expect(targetsOk).toBe(true);
+
+    // The scramble loop locks onto the real text within a cycle.
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            (s) => [...document.querySelectorAll(s)].map((c) => c.textContent).join(''),
+            sel
+          ),
+        { timeout: 5000 }
+      )
+      .toBe('DECODE ME');
+  });
+});
+
 test.describe('Accessibility', () => {
   test('respects reduced motion preference (animation disabled)', async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: 'reduce' });
