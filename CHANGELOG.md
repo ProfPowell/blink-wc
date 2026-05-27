@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] — 2026-05-27
+
+### Fixed
+
+- **Traffic-light / custom step demos and docs were broken after 1.4.0.** When
+  `data-step` moved from the host onto the stepped element, the example CSS still
+  targeted the old `blink-wc[data-step='K'] .blink-content` selector, so custom
+  per-step styling never applied (the traffic light never changed colour). The
+  demo and README/`docs` examples now target
+  `blink-wc :is(.blink-content, .blink-char)[data-step='K']`. (Component code was
+  already correct; this is a docs/demo fix.)
+
 ## [1.4.0] — 2026-05-27
 
 ### Added

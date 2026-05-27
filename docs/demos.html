@@ -258,7 +258,7 @@
           A custom 3-step traffic light: green holds longest, yellow briefly, red a while (<code
             >step-durations="6 1 4"</code
           >), and each light eases in with its own timing — all via
-          <code>blink-wc[data-step='K'] .blink-content { … }</code>.
+          <code>blink-wc :is(.blink-content, .blink-char)[data-step='K'] { … }</code>.
         </p>
         <style>
           blink-wc.traffic {
@@ -267,15 +267,15 @@
           blink-wc.traffic .blink-content {
             text-shadow: 0 0 0.4em currentColor;
           }
-          blink-wc.traffic[data-step='0'] .blink-content {
+          blink-wc.traffic :is(.blink-content, .blink-char)[data-step='0'] {
             color: oklch(70% 0.18 145);
             --blink-step-ease: 0.2s;
           }
-          blink-wc.traffic[data-step='1'] .blink-content {
+          blink-wc.traffic :is(.blink-content, .blink-char)[data-step='1'] {
             color: oklch(80% 0.16 85);
             --blink-step-ease: 0.1s;
           }
-          blink-wc.traffic[data-step='2'] .blink-content {
+          blink-wc.traffic :is(.blink-content, .blink-char)[data-step='2'] {
             color: oklch(62% 0.2 25);
             /* red eases in slowly with a little overshoot */
             --blink-step-ease: 0.5s;
