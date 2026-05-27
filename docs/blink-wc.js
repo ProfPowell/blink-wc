@@ -1,4 +1,4 @@
-const g = [
+const y = [
   "wave",
   "twinkle",
   "sparkle",
@@ -13,7 +13,7 @@ const g = [
   "shake",
   "heartbeat",
   "decode"
-], A = ["extrude", "collapse", "outline", "morph", "depth", "revolve"], k = { morph: 4, revolve: 4 }, y = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+=?<>/~^|", b = {
+], A = ["extrude", "collapse", "outline", "morph", "depth", "revolve"], k = { morph: 4, revolve: 4 }, g = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+=?<>/~^|", b = {
   a: ".-",
   b: "-...",
   c: "-.-.",
@@ -73,6 +73,7 @@ class v extends HTMLElement {
       "min-opacity",
       "count",
       "steps",
+      "step-durations",
       "play-state",
       "pause-on-hover",
       "reduced-motion",
@@ -98,6 +99,9 @@ class v extends HTMLElement {
   get steps() {
     const t = parseInt(this.getAttribute("steps"), 10);
     return Number.isFinite(t) && t >= 2 ? t : k[this.mode] || 2;
+  }
+  get stepDurations() {
+    return this.getAttribute("step-durations") || null;
   }
   get playState() {
     return this.getAttribute("play-state") || "running";
@@ -141,33 +145,33 @@ class v extends HTMLElement {
   }
   // Restore authored markup, then split into letters if the mode needs it.
   _renderContent() {
-    this._sourceHTML != null && (this._content.innerHTML = this._sourceHTML, g.includes(this.mode) ? (this._splitLetters(), this.dataset.split = "") : delete this.dataset.split);
+    this._sourceHTML != null && (this._content.innerHTML = this._sourceHTML, y.includes(this.mode) ? (this._splitLetters(), this.dataset.split = "") : delete this.dataset.split);
   }
   // Wrap each character in a <span class="blink-char"> with a stagger index, so
   // CSS can animate units individually (wave, twinkle, sparkle, chase, …).
   _splitLetters() {
     const t = document.createTreeWalker(this._content, NodeFilter.SHOW_TEXT), e = [];
     for (; t.nextNode(); ) e.push(t.currentNode);
-    const s = this.unit === "word", a = this.mode === "twinkle" || this.mode === "sparkle", l = this.mode === "decode", c = (i) => i.trim() === "";
-    let h = 0;
-    for (const i of e) {
-      const u = document.createDocumentFragment(), n = s ? this._tokenizeWords(i.textContent) : [...i.textContent];
-      for (const r of n) {
-        if (r === "") continue;
-        const m = c(r), d = document.createElement("span");
-        d.className = "blink-char", d.style.setProperty("--i", h++), a && (d.style.setProperty("--rate", `${(0.4 + Math.random() * 1.6).toFixed(2)}s`), d.style.setProperty("--delay", `${Math.random().toFixed(2)}s`)), m ? (d.classList.add("blink-space"), d.textContent = " ") : (d.textContent = r, l && (d.dataset.ch = r)), u.appendChild(d);
+    const s = this.unit === "word", r = this.mode === "twinkle" || this.mode === "sparkle", h = this.mode === "decode", u = (n) => n.trim() === "";
+    let p = 0;
+    for (const n of e) {
+      const d = document.createDocumentFragment(), l = s ? this._tokenizeWords(n.textContent) : [...n.textContent];
+      for (const i of l) {
+        if (i === "") continue;
+        const c = u(i), o = document.createElement("span");
+        o.className = "blink-char", o.style.setProperty("--i", p++), r && (o.style.setProperty("--rate", `${(0.4 + Math.random() * 1.6).toFixed(2)}s`), o.style.setProperty("--delay", `${Math.random().toFixed(2)}s`)), c ? (o.classList.add("blink-space"), o.textContent = " ") : (o.textContent = i, h && (o.dataset.ch = i)), d.appendChild(o);
       }
-      i.replaceWith(u);
+      n.replaceWith(d);
     }
-    this._content.style.setProperty("--n", h);
+    this._content.style.setProperty("--n", p);
   }
   // Split text into word and whitespace-run tokens (no regex escapes needed).
   _tokenizeWords(t) {
     const e = [];
-    let s = "", a = null;
-    for (const l of t) {
-      const c = l.trim() === "";
-      s !== "" && c !== a && (e.push(s), s = ""), s += l, a = c;
+    let s = "", r = null;
+    for (const h of t) {
+      const u = h.trim() === "";
+      s !== "" && u !== r && (e.push(s), s = ""), s += h, r = u;
     }
     return s !== "" && e.push(s), e;
   }
@@ -181,12 +185,12 @@ class v extends HTMLElement {
   // morse mode: blink the text out as Morse code. CSS keys off data-lit to light
   // the text; we also expose the dot/dash string via data-morse for a caption.
   _syncMorse() {
-    var n;
+    var l;
     if (this._stopMorse(), this.mode !== "morse") {
       delete this.dataset.lit, delete this.dataset.morse;
       return;
     }
-    const t = (((n = this._content) == null ? void 0 : n.textContent) || "").trim();
+    const t = (((l = this._content) == null ? void 0 : l.textContent) || "").trim();
     if (this.dataset.morse = this._toMorse(t), this.getAttribute("reduced-motion") !== "ignore" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
       this.dataset.lit = "true";
       return;
@@ -196,38 +200,38 @@ class v extends HTMLElement {
       this.dataset.lit = "true";
       return;
     }
-    const a = parseFloat(getComputedStyle(this).getPropertyValue("--blink-dot")), l = Number.isFinite(a) && a > 0 ? a : 170, c = s.reduce((r, m) => r + m.dur, 0) + 7;
-    let h = 0, i = null;
-    const u = (r) => {
-      this._morseRAF = requestAnimationFrame(u), i == null && (i = r);
-      const m = r - i;
-      if (i = r, this._isPaused()) return;
-      h += m;
-      const d = h / l % c;
-      let o = 0, _ = !1;
-      for (const p of s) {
-        if (d < o + p.dur) {
-          _ = p.lit;
+    const r = parseFloat(getComputedStyle(this).getPropertyValue("--blink-dot")), h = Number.isFinite(r) && r > 0 ? r : 170, u = s.reduce((i, c) => i + c.dur, 0) + 7;
+    let p = 0, n = null;
+    const d = (i) => {
+      this._morseRAF = requestAnimationFrame(d), n == null && (n = i);
+      const c = i - n;
+      if (n = i, this._isPaused()) return;
+      p += c;
+      const o = p / h % u;
+      let a = 0, m = !1;
+      for (const f of s) {
+        if (o < a + f.dur) {
+          m = f.lit;
           break;
         }
-        o += p.dur;
+        a += f.dur;
       }
-      const f = _ ? "true" : "false";
-      this.dataset.lit !== f && (this.dataset.lit = f);
+      const _ = m ? "true" : "false";
+      this.dataset.lit !== _ && (this.dataset.lit = _);
     };
-    this.dataset.lit = "false", this._morseRAF = requestAnimationFrame(u);
+    this.dataset.lit = "false", this._morseRAF = requestAnimationFrame(d);
   }
   // Build an on/off timeline (durations in Morse "units") for a string.
   _morseSegments(t) {
     const e = [], s = t.toLowerCase().split(/\s+/).filter(Boolean);
-    return s.forEach((a, l) => {
-      const c = [...a].filter((h) => b[h]);
-      c.forEach((h, i) => {
-        const u = b[h];
-        [...u].forEach((n, r) => {
-          e.push({ lit: !0, dur: n === "-" ? 3 : 1 }), r < u.length - 1 && e.push({ lit: !1, dur: 1 });
-        }), i < c.length - 1 && e.push({ lit: !1, dur: 3 });
-      }), l < s.length - 1 && e.push({ lit: !1, dur: 7 });
+    return s.forEach((r, h) => {
+      const u = [...r].filter((p) => b[p]);
+      u.forEach((p, n) => {
+        const d = b[p];
+        [...d].forEach((l, i) => {
+          e.push({ lit: !0, dur: l === "-" ? 3 : 1 }), i < d.length - 1 && e.push({ lit: !1, dur: 1 });
+        }), n < u.length - 1 && e.push({ lit: !1, dur: 3 });
+      }), h < s.length - 1 && e.push({ lit: !1, dur: 7 });
     }), e;
   }
   // Human-readable dot/dash string, words separated by " / ".
@@ -259,32 +263,32 @@ class v extends HTMLElement {
   _syncDecode() {
     if (this._stopDecode(), this.mode !== "decode") return;
     const t = [...this.querySelectorAll(".blink-char")].filter(
-      (o) => !o.classList.contains("blink-space") && o.dataset.ch != null
+      (a) => !a.classList.contains("blink-space") && a.dataset.ch != null
     );
     if (t.length === 0) return;
     if (this.getAttribute("reduced-motion") !== "ignore" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      for (const o of t) o.textContent = o.dataset.ch;
+      for (const a of t) a.textContent = a.dataset.ch;
       return;
     }
-    const s = () => y[Math.random() * y.length | 0], a = 650, l = 45, c = 1800, h = 55;
-    let i = 0;
-    const u = t.map((o) => {
-      const _ = Number(o.style.getPropertyValue("--i")) || 0, f = a + _ * l;
-      return f > i && (i = f), { s: o, settleAt: f, target: o.dataset.ch };
+    const s = () => g[Math.random() * g.length | 0], r = 650, h = 45, u = 1800, p = 55;
+    let n = 0;
+    const d = t.map((a) => {
+      const m = Number(a.style.getPropertyValue("--i")) || 0, _ = r + m * h;
+      return _ > n && (n = _), { s: a, settleAt: _, target: a.dataset.ch };
     });
-    let n = 0, r = null, m = 0;
-    const d = (o) => {
-      this._decodeRAF = requestAnimationFrame(d), r == null && (r = o);
-      const _ = o - r;
-      if (r = o, this._isPaused()) return;
-      n += _;
-      const f = n - m >= h;
-      f && (m = n);
-      for (const p of u)
-        n >= p.settleAt ? p.s.textContent !== p.target && (p.s.textContent = p.target) : f && (p.s.textContent = s());
-      n > i + c && (n = 0, m = 0);
+    let l = 0, i = null, c = 0;
+    const o = (a) => {
+      this._decodeRAF = requestAnimationFrame(o), i == null && (i = a);
+      const m = a - i;
+      if (i = a, this._isPaused()) return;
+      l += m;
+      const _ = l - c >= p;
+      _ && (c = l);
+      for (const f of d)
+        l >= f.settleAt ? f.s.textContent !== f.target && (f.s.textContent = f.target) : _ && (f.s.textContent = s());
+      l > n + u && (l = 0, c = 0);
     };
-    this._decodeRAF = requestAnimationFrame(d);
+    this._decodeRAF = requestAnimationFrame(o);
   }
   // Whether the multi-step engine should drive this element.
   _usesSteps() {
@@ -299,10 +303,21 @@ class v extends HTMLElement {
   _stopSteps() {
     this._stepRAF && cancelAnimationFrame(this._stepRAF), this._stepRAF = null;
   }
-  // Multi-step engine: advance data-step="0..N-1" across one cycle (`rate`),
-  // holding each step for an equal slice. CSS styles each step, so a step can
-  // change colour, transform, outline, etc. — a plain blink is the 2-step case.
-  // Freezes when paused/off-screen/tab-hidden; rests at step 0 under reduced motion.
+  // Parse `step-durations` into per-step weights, one per step. Accepts a
+  // space- or comma-separated list (e.g. "3 1 1" or "2,1"); the list is cycled
+  // or truncated to fit the step count. Absent/invalid → equal weights.
+  _stepWeights(t) {
+    const e = this.stepDurations;
+    if (!e) return Array(t).fill(1);
+    const s = e.split(/[\s,]+/).map(Number).filter((r) => Number.isFinite(r) && r > 0);
+    return s.length === 0 ? Array(t).fill(1) : Array.from({ length: t }, (r, h) => s[h % s.length]);
+  }
+  // Multi-step engine: advance data-step="0..N-1" across one cycle (`rate`). Each
+  // step holds for a slice of the cycle — equal by default, or weighted by
+  // `step-durations`. CSS styles each step (colour, transform, outline, …) and
+  // can give each step its own transition timing (--blink-step-ease /
+  // --blink-step-timing); a plain blink is the 2-step case. Freezes when
+  // paused/off-screen/tab-hidden; rests at step 0 under reduced motion.
   _syncSteps() {
     if (this._stopSteps(), !this._usesSteps()) {
       delete this.dataset.step;
@@ -313,18 +328,23 @@ class v extends HTMLElement {
       this.dataset.step = "0";
       return;
     }
-    const s = this._parseTime(this.rate) / t;
-    let a = 0, l = null, c = 0;
+    const s = this._stepWeights(t), r = s.reduce((c, o) => c + o, 0), h = this._parseTime(this.rate), u = [];
+    let p = 0;
+    for (const c of s)
+      p += c, u.push(p / r * h);
+    let n = 0, d = null, l = 0;
     this.dataset.step = "0";
-    const h = (i) => {
-      this._stepRAF = requestAnimationFrame(h), l == null && (l = i);
-      const u = i - l;
-      if (l = i, this._isPaused()) return;
-      a += u;
-      const n = Math.floor(a / s) % t;
-      n !== c && (this.dataset.step = String(n), n < c && this._dispatch("blink-cycle"), c = n);
+    const i = (c) => {
+      this._stepRAF = requestAnimationFrame(i), d == null && (d = c);
+      const o = c - d;
+      if (d = c, this._isPaused()) return;
+      n += o;
+      const a = n % h;
+      let m = 0;
+      for (; m < t - 1 && a >= u[m]; ) m++;
+      m !== l && (this.dataset.step = String(m), m < l && this._dispatch("blink-cycle"), l = m);
     };
-    this._stepRAF = requestAnimationFrame(h);
+    this._stepRAF = requestAnimationFrame(i);
   }
   _dispatch(t) {
     this.dispatchEvent(new CustomEvent(t, { bubbles: !0 }));

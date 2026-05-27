@@ -38,6 +38,11 @@
             },
             {
               "kind": "field",
+              "name": "stepDurations",
+              "readonly": true
+            },
+            {
+              "kind": "field",
               "name": "playState",
               "readonly": true
             },
@@ -153,6 +158,15 @@
             },
             {
               "kind": "method",
+              "name": "_stepWeights",
+              "parameters": [
+                {
+                  "name": "n"
+                }
+              ]
+            },
+            {
+              "kind": "method",
               "name": "_syncSteps"
             },
             {
@@ -188,6 +202,9 @@
             },
             {
               "name": "steps"
+            },
+            {
+              "name": "step-durations"
             },
             {
               "name": "play-state"

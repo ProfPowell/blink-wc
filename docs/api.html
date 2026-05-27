@@ -129,6 +129,12 @@
               <td>Step count for the multi-step engine (min 2)</td>
             </tr>
             <tr>
+              <td><code>step-durations</code></td>
+              <td>list</td>
+              <td>equal</td>
+              <td>Per-step hold weights, e.g. <code>3 1 1</code> (normalized across the cycle)</td>
+            </tr>
+            <tr>
               <td><code>pause-on-hover</code></td>
               <td>boolean</td>
               <td>—</td>
@@ -209,8 +215,8 @@
             <tr>
               <td>
                 <code>rate</code>, <code>behavior</code>, <code>minOpacity</code>,
-                <code>count</code>, <code>steps</code>, <code>playState</code>, <code>mode</code>,
-                <code>unit</code>
+                <code>count</code>, <code>steps</code>, <code>stepDurations</code>,
+                <code>playState</code>, <code>mode</code>, <code>unit</code>
               </td>
               <td>Readonly getters reflecting current configuration</td>
             </tr>
@@ -273,7 +279,11 @@
             </tr>
             <tr>
               <td><code>--blink-step-ease</code></td>
-              <td>Transition between steps in the step engine (<code>0s</code> = hard cut)</td>
+              <td>Transition duration between steps (<code>0s</code> = hard cut)</td>
+            </tr>
+            <tr>
+              <td><code>--blink-step-timing</code></td>
+              <td>Transition timing-function between steps (default <code>ease</code>)</td>
             </tr>
             <tr>
               <td><code>--blink-dot</code></td>

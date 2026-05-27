@@ -443,21 +443,25 @@ blink-wc[mode='typewriter'] .blink-content::after {
  * equal slice. Each step is just a CSS state, so a step can change colour,
  * transform, outline, glow — anything. A plain on/off blink is the 2-step case.
  *
- * --blink-step-ease controls the transition *between* steps: 0s (default) is a
- * hard cut (true blink); a non-zero value morphs smoothly from one step to the
- * next (collapse, extrude, morph). Authors can target their own steps with
- * `blink-wc[data-step='K'] .blink-content { … }`.
+ * --blink-step-ease  controls the transition duration *between* steps: 0s
+ *   (default) is a hard cut (true blink); a non-zero value morphs smoothly.
+ * --blink-step-timing is the transition timing-function (default `ease`).
+ *
+ * Both are read from the *incoming* step's computed style, so a step can carry
+ * its own duration and easing — set them under `blink-wc[data-step='K']` for
+ * per-step timing. The hold time of each step is set by `step-durations`.
+ * Authors target their own steps with `blink-wc[data-step='K'] .blink-content`.
  * ──────────────────────────────────────────────────────────────────────── */
 
 blink-wc[data-step] .blink-content {
   display: inline-block;
   transition:
-    opacity var(--blink-step-ease, 0s) linear,
-    color var(--blink-step-ease, 0s) linear,
-    transform var(--blink-step-ease, 0s) ease,
-    text-shadow var(--blink-step-ease, 0s) linear,
-    letter-spacing var(--blink-step-ease, 0s) ease,
-    -webkit-text-stroke-color var(--blink-step-ease, 0s) linear;
+    opacity var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
+    color var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
+    transform var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
+    text-shadow var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
+    letter-spacing var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
+    -webkit-text-stroke-color var(--blink-step-ease, 0s) var(--blink-step-timing, ease);
 }
 
 /* Default two-state: behavior="steps" with no preset is a plain blink. */

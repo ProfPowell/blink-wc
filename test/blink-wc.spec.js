@@ -188,6 +188,33 @@ test.describe('Step engine', () => {
       .toBe(true);
   });
 
+  test('step-durations is exposed and the sequence cycles through every step', async ({ page }) => {
+    const el = page.locator('#seq');
+    await el.scrollIntoViewIfNeeded();
+    const weights = await page.evaluate(() => document.getElementById('seq').stepDurations);
+    expect(weights).toBe('3 1 1');
+    // Across a cycle it visits all three steps, despite the uneven hold times.
+    const seen = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const el = document.getElementById('seq');
+          const set = new Set();
+          const id = setInterval(() => {
+            set.add(el.dataset.step);
+            if (set.size >= 3) {
+              clearInterval(id);
+              resolve([...set].sort());
+            }
+          }, 30);
+          setTimeout(() => {
+            clearInterval(id);
+            resolve([...set].sort());
+          }, 3000);
+        })
+    );
+    expect(seen).toEqual(['0', '1', '2']);
+  });
+
   test('the step driver freezes while paused', async ({ page }) => {
     await page.evaluate(() => {
       const el = document.getElementById('extrude');
