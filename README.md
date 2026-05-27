@@ -56,19 +56,20 @@ page (link the CSS, or `import '@profpowell/blink-wc/style.css'` in a bundler).
 
 ## Attributes
 
-| Attribute        | Type    | Default    | Description                                           |
-| ---------------- | ------- | ---------- | ----------------------------------------------------- |
-| `rate`           | time    | `1s`       | CSS time for one blink cycle                          |
-| `behavior`       | string  | `blink`    | `blink` \| `pulse` \| `flicker` \| `steps`            |
-| `min-opacity`    | number  | per-mode   | Opacity of the "off" phase (0–1)                      |
-| `count`          | number  | `infinite` | Number of blinks, then stop                           |
-| `steps`          | number  | `2`        | Step count for the multi-step engine (min 2)          |
-| `step-durations` | list    | equal      | Per-step hold weights, e.g. `3 1 1`                   |
-| `pause-on-hover` | boolean | —          | Also pauses on `:focus-within`                        |
-| `play-state`     | string  | `running`  | `running` \| `paused`                                 |
-| `reduced-motion` | string  | `respect`  | `respect` \| `ignore`                                 |
-| `mode`           | string  | —          | A visual/motion preset (see Modes below)              |
-| `unit`           | string  | `letter`   | `letter` \| `word` — granularity for the motion modes |
+| Attribute        | Type    | Default    | Description                                                        |
+| ---------------- | ------- | ---------- | ------------------------------------------------------------------ |
+| `rate`           | time    | `1s`       | CSS time for one blink cycle                                       |
+| `behavior`       | string  | `blink`    | `blink` \| `pulse` \| `flicker` \| `steps`                         |
+| `min-opacity`    | number  | per-mode   | Opacity of the "off" phase (0–1)                                   |
+| `count`          | number  | `infinite` | Number of blinks, then stop                                        |
+| `steps`          | number  | `2`        | Step count for the multi-step engine (min 2)                       |
+| `step-durations` | list    | equal      | Per-step hold weights, e.g. `3 1 1`                                |
+| `step-by`        | string  | `element`  | `element` \| `letter` \| `word` — step the whole text or each unit |
+| `pause-on-hover` | boolean | —          | Also pauses on `:focus-within`                                     |
+| `play-state`     | string  | `running`  | `running` \| `paused`                                              |
+| `reduced-motion` | string  | `respect`  | `respect` \| `ignore`                                              |
+| `mode`           | string  | —          | A visual/motion preset (see Modes below)                           |
+| `unit`           | string  | `letter`   | `letter` \| `word` — granularity for the motion modes              |
 
 ## Modes
 
@@ -176,15 +177,28 @@ anything. A plain blink is simply the 2-step case.
 - **`--blink-step-timing`** is the transition _timing-function_ (default `ease`).
 
 `--blink-step-ease` and `--blink-step-timing` are read from the **incoming**
-step's computed style, so each step can carry its own duration and easing — set
-them under `blink-wc[data-step='K'] .blink-content` for fully per-step timing:
+step's computed style, so each step can carry its own duration and easing. The
+stepped element carries `data-step` (the `.blink-content`, or each `.blink-char`
+when stepping per unit), so target your steps with
+`blink-wc :is(.blink-content, .blink-char)[data-step='K']`:
 
 ```css
 /* step 2 eases in slowly with a bounce; the others snap */
-blink-wc.light[data-step='2'] .blink-content {
+blink-wc.light :is(.blink-content, .blink-char)[data-step='2'] {
   --blink-step-ease: 0.5s;
   --blink-step-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+```
+
+### Per-letter sequences
+
+By default the whole text steps together. Set **`step-by="letter"`** (or
+`"word"`) and every unit runs the sequence offset by its index (by
+`--blink-stagger`), so the states **ripple** across the text — a wave of colour,
+depth, or transform. It works with the built-in step modes and your own:
+
+```html
+<blink-wc mode="depth" step-by="letter" rate="0.6s">RIPPLE</blink-wc>
 ```
 
 The step driver freezes when paused, off-screen, or in a hidden tab, and rests

@@ -45,6 +45,7 @@
       <span class="links">
         <a href="index.html">Home</a>
         <a href="demos.html" class="active">Demos</a>
+        <a href="playground.html">Playground</a>
         <a href="api.html">API</a>
         <a href="https://github.com/profpowell/blink-wc">GitHub</a>
       </span>
@@ -239,6 +240,18 @@
 
         <h3><code>mode="revolve"</code> — flips to the back and around</h3>
         <div class="demo"><blink-wc mode="revolve" rate="2.4s">REVOLVE</blink-wc></div>
+
+        <h3><code>step-by="letter"</code> — the sequence ripples across the letters</h3>
+        <p>
+          Every unit runs the step cycle offset by its index, so the states travel across the text
+          rather than changing in lockstep.
+        </p>
+        <div class="demo">
+          <blink-wc mode="depth" step-by="letter" rate="0.7s">RIPPLE</blink-wc>
+        </div>
+        <div class="demo">
+          <blink-wc mode="morph" step-by="letter" rate="1.2s">CASCADE OF COLOUR</blink-wc>
+        </div>
 
         <h3><code>behavior="steps"</code> — roll your own with per-step timing</h3>
         <p>

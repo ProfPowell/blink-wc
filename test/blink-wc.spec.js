@@ -162,17 +162,18 @@ test.describe('Morse mode', () => {
 });
 
 test.describe('Step engine', () => {
-  test('mode="extrude" cycles data-step between 0 and 1', async ({ page }) => {
+  // The stepped element carries data-step (the .blink-content for whole-text
+  // stepping); the host carries a data-stepping marker.
+  const contentStep = (page, id) =>
+    page.evaluate((i) => document.querySelector(`#${i} .blink-content`).dataset.step, id);
+
+  test('mode="extrude" cycles data-step on the content between 0 and 1', async ({ page }) => {
     const el = page.locator('#extrude');
     await el.scrollIntoViewIfNeeded();
-    await expect(el).toHaveAttribute('data-step', /[01]/);
+    await expect(el).toHaveAttribute('data-stepping', '');
     // The driver advances the step over time.
-    await expect
-      .poll(() => page.evaluate(() => document.getElementById('extrude').dataset.step === '1'), {
-        timeout: 5000,
-      })
-      .toBe(true);
-    // It does not split into per-letter spans.
+    await expect.poll(() => contentStep(page, 'extrude'), { timeout: 5000 }).toBe('1');
+    // It does not split into per-letter spans (step-by defaults to "element").
     expect(await el.locator('.blink-char').count()).toBe(0);
   });
 
@@ -181,11 +182,7 @@ test.describe('Step engine', () => {
     const steps = await page.evaluate(() => document.getElementById('morph').steps);
     expect(steps).toBe(4);
     // It eventually reaches the highest step index (3).
-    await expect
-      .poll(() => page.evaluate(() => document.getElementById('morph').dataset.step === '3'), {
-        timeout: 5000,
-      })
-      .toBe(true);
+    await expect.poll(() => contentStep(page, 'morph'), { timeout: 5000 }).toBe('3');
   });
 
   test('step-durations is exposed and the sequence cycles through every step', async ({ page }) => {
@@ -197,10 +194,10 @@ test.describe('Step engine', () => {
     const seen = await page.evaluate(
       () =>
         new Promise((resolve) => {
-          const el = document.getElementById('seq');
+          const c = document.querySelector('#seq .blink-content');
           const set = new Set();
           const id = setInterval(() => {
-            set.add(el.dataset.step);
+            set.add(c.dataset.step);
             if (set.size >= 3) {
               clearInterval(id);
               resolve([...set].sort());
@@ -215,6 +212,33 @@ test.describe('Step engine', () => {
     expect(seen).toEqual(['0', '1', '2']);
   });
 
+  test('step-by="letter" steps each unit on its own staggered clock', async ({ page }) => {
+    const el = page.locator('#perletter');
+    await el.scrollIntoViewIfNeeded();
+    await expect(el).toHaveAttribute('data-split', '');
+    await expect(el).toHaveAttribute('data-stepping', '');
+    // Every unit carries its own data-step, and at some moment they differ
+    // (the states ripple across the letters rather than moving in lockstep).
+    const sawDifference = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const chars = [...document.querySelectorAll('#perletter .blink-char')];
+          const id = setInterval(() => {
+            const steps = chars.map((c) => c.dataset.step);
+            if (steps.every((s) => s != null) && new Set(steps).size > 1) {
+              clearInterval(id);
+              resolve(true);
+            }
+          }, 30);
+          setTimeout(() => {
+            clearInterval(id);
+            resolve(false);
+          }, 3000);
+        })
+    );
+    expect(sawDifference).toBe(true);
+  });
+
   test('the step driver freezes while paused', async ({ page }) => {
     await page.evaluate(() => {
       const el = document.getElementById('extrude');
@@ -222,9 +246,9 @@ test.describe('Step engine', () => {
       el.stop();
     });
     await page.waitForTimeout(150);
-    const a = await page.evaluate(() => document.getElementById('extrude').dataset.step);
+    const a = await contentStep(page, 'extrude');
     await page.waitForTimeout(600);
-    const b = await page.evaluate(() => document.getElementById('extrude').dataset.step);
+    const b = await contentStep(page, 'extrude');
     expect(a).toBe(b);
   });
 });
@@ -243,9 +267,14 @@ test.describe('More motion modes', () => {
     const info = await page.evaluate(() => {
       const el = document.getElementById('zoom');
       el.setAttribute('mode', 'depth');
-      return { split: el.hasAttribute('data-split'), step: el.dataset.step };
+      return {
+        split: el.hasAttribute('data-split'),
+        stepping: el.hasAttribute('data-stepping'),
+        step: el.querySelector('.blink-content').dataset.step,
+      };
     });
     expect(info.split).toBe(false);
+    expect(info.stepping).toBe(true);
     expect(['0', '1']).toContain(info.step);
   });
 });

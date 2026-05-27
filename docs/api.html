@@ -49,6 +49,7 @@
       <span class="links">
         <a href="index.html">Home</a>
         <a href="demos.html">Demos</a>
+        <a href="playground.html">Playground</a>
         <a href="api.html" class="active">API</a>
         <a href="https://github.com/profpowell/blink-wc">GitHub</a>
       </span>
@@ -133,6 +134,15 @@
               <td>list</td>
               <td>equal</td>
               <td>Per-step hold weights, e.g. <code>3 1 1</code> (normalized across the cycle)</td>
+            </tr>
+            <tr>
+              <td><code>step-by</code></td>
+              <td>string</td>
+              <td><code>element</code></td>
+              <td>
+                <code>element</code> | <code>letter</code> | <code>word</code> — step the whole text
+                together, or each unit on its own staggered clock
+              </td>
             </tr>
             <tr>
               <td><code>pause-on-hover</code></td>
