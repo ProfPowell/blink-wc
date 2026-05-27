@@ -152,13 +152,13 @@ anything. A plain blink is simply the 2-step case.
   blink-wc.light {
     --blink-step-ease: 0.15s;
   }
-  blink-wc.light[data-step='0'] .blink-content {
+  blink-wc.light :is(.blink-content, .blink-char)[data-step='0'] {
     color: oklch(62% 0.2 25);
   }
-  blink-wc.light[data-step='1'] .blink-content {
+  blink-wc.light :is(.blink-content, .blink-char)[data-step='1'] {
     color: oklch(80% 0.16 85);
   }
-  blink-wc.light[data-step='2'] .blink-content {
+  blink-wc.light :is(.blink-content, .blink-char)[data-step='2'] {
     color: oklch(70% 0.18 145);
   }
 </style>
