@@ -217,7 +217,9 @@
           With <code>behavior="steps"</code> (or any step mode) the blink advances through
           <code>N</code> steps across one cycle, and each step is its own style state —
           <code>data-step="0"</code>…<code>data-step="N-1"</code>. A plain blink is the 2-step case.
-          <code>--blink-step-ease</code> morphs smoothly between steps.
+          <code>step-durations</code> sets how long each step holds;
+          <code>--blink-step-ease</code> and <code>--blink-step-timing</code> morph between steps
+          (and can differ per step).
         </p>
 
         <h3><code>mode="extrude"</code> — isometric 3D punch toward you</h3>
@@ -238,31 +240,39 @@
         <h3><code>mode="revolve"</code> — flips to the back and around</h3>
         <div class="demo"><blink-wc mode="revolve" rate="2.4s">REVOLVE</blink-wc></div>
 
-        <h3><code>behavior="steps"</code> — roll your own with CSS per step</h3>
+        <h3><code>behavior="steps"</code> — roll your own with per-step timing</h3>
         <p>
-          A custom 3-step traffic light, styled with
+          A custom 3-step traffic light: green holds longest, yellow briefly, red a while (<code
+            >step-durations="6 1 4"</code
+          >), and each light eases in with its own timing — all via
           <code>blink-wc[data-step='K'] .blink-content { … }</code>.
         </p>
         <style>
           blink-wc.traffic {
-            --blink-step-ease: 0.15s;
             font-size: 2.5rem;
           }
-          blink-wc.traffic[data-step='0'] .blink-content {
-            color: oklch(62% 0.2 25);
+          blink-wc.traffic .blink-content {
             text-shadow: 0 0 0.4em currentColor;
+          }
+          blink-wc.traffic[data-step='0'] .blink-content {
+            color: oklch(70% 0.18 145);
+            --blink-step-ease: 0.2s;
           }
           blink-wc.traffic[data-step='1'] .blink-content {
             color: oklch(80% 0.16 85);
-            text-shadow: 0 0 0.4em currentColor;
+            --blink-step-ease: 0.1s;
           }
           blink-wc.traffic[data-step='2'] .blink-content {
-            color: oklch(70% 0.18 145);
-            text-shadow: 0 0 0.4em currentColor;
+            color: oklch(62% 0.2 25);
+            /* red eases in slowly with a little overshoot */
+            --blink-step-ease: 0.5s;
+            --blink-step-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
           }
         </style>
         <div class="demo">
-          <blink-wc class="traffic" behavior="steps" steps="3" rate="3s">●</blink-wc>
+          <blink-wc class="traffic" behavior="steps" steps="3" step-durations="6 1 4" rate="11s"
+            >●</blink-wc
+          >
         </div>
       </section>
 

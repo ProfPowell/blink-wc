@@ -63,6 +63,7 @@ page (link the CSS, or `import '@profpowell/blink-wc/style.css'` in a bundler).
 | `min-opacity`    | number  | per-mode   | Opacity of the "off" phase (0–1)                      |
 | `count`          | number  | `infinite` | Number of blinks, then stop                           |
 | `steps`          | number  | `2`        | Step count for the multi-step engine (min 2)          |
+| `step-durations` | list    | equal      | Per-step hold weights, e.g. `3 1 1`                   |
 | `pause-on-hover` | boolean | —          | Also pauses on `:focus-within`                        |
 | `play-state`     | string  | `running`  | `running` \| `paused`                                 |
 | `reduced-motion` | string  | `respect`  | `respect` \| `ignore`                                 |
@@ -161,13 +162,33 @@ anything. A plain blink is simply the 2-step case.
   }
 </style>
 
-<blink-wc class="light" behavior="steps" steps="3" rate="3s">●</blink-wc>
+<!-- green holds 6×, yellow 1×, red 4× of the 11s cycle -->
+<blink-wc class="light" behavior="steps" steps="3" step-durations="6 1 4" rate="11s">●</blink-wc>
 ```
 
-`--blink-step-ease` controls the transition between steps: `0s` (default) is a
-hard cut — a true blink; a non-zero value morphs smoothly from one step to the
-next. The step driver freezes when paused, off-screen, or in a hidden tab, and
-rests at step 0 under `prefers-reduced-motion`.
+### Timing per step
+
+- **`step-durations`** sets how long each step _holds_, as a list of weights
+  (`"6 1 4"`); they're normalized across the `rate` cycle. Omit it for equal
+  slices. The list is cycled/truncated to fit the step count.
+- **`--blink-step-ease`** is the transition _duration_ between steps: `0s`
+  (default) is a hard cut — a true blink; non-zero morphs smoothly.
+- **`--blink-step-timing`** is the transition _timing-function_ (default `ease`).
+
+`--blink-step-ease` and `--blink-step-timing` are read from the **incoming**
+step's computed style, so each step can carry its own duration and easing — set
+them under `blink-wc[data-step='K'] .blink-content` for fully per-step timing:
+
+```css
+/* step 2 eases in slowly with a bounce; the others snap */
+blink-wc.light[data-step='2'] .blink-content {
+  --blink-step-ease: 0.5s;
+  --blink-step-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+```
+
+The step driver freezes when paused, off-screen, or in a hidden tab, and rests
+at step 0 under `prefers-reduced-motion`.
 
 ## API
 

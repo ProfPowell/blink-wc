@@ -4,6 +4,20 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] — 2026-05-27
+
+### Added
+
+- **Per-step hold durations** — the new `step-durations` attribute takes a space-
+  or comma-separated list of weights (e.g. `step-durations="3 1 1"`) so each step
+  of the multi-step engine can hold for a different slice of the cycle instead of
+  an equal one. The list is cycled/truncated to fit the step count. Added a
+  `stepDurations` getter.
+- **Per-step easing** — the between-step transition now uses `--blink-step-timing`
+  (default `ease`) alongside `--blink-step-ease` (duration). Both are read from
+  the _incoming_ step's computed style, so a step can carry its own transition
+  duration **and** timing-function via `blink-wc[data-step='K'] .blink-content`.
+
 ## [1.2.0] — 2026-05-27
 
 ### Added

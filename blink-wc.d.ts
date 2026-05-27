@@ -67,6 +67,8 @@ export declare class BlinkWc extends HTMLElement {
   get count(): string;
   /** Number of steps in the multi-step engine (min 2). Attribute: `steps`. */
   get steps(): number;
+  /** Per-step hold weights, or `null`. Attribute: `step-durations`. */
+  get stepDurations(): string | null;
   /** Playback state. Attribute: `play-state`. Default `running`. */
   get playState(): BlinkPlayState;
   /** Active visual/motion preset. Attribute: `mode`. Default `''` (none). */

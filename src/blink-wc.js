@@ -114,6 +114,7 @@ class BlinkWc extends HTMLElement {
       'min-opacity',
       'count',
       'steps',
+      'step-durations',
       'play-state',
       'pause-on-hover',
       'reduced-motion',
@@ -141,6 +142,9 @@ class BlinkWc extends HTMLElement {
     const v = parseInt(this.getAttribute('steps'), 10);
     if (Number.isFinite(v) && v >= 2) return v;
     return STEP_COUNTS[this.mode] || 2;
+  }
+  get stepDurations() {
+    return this.getAttribute('step-durations') || null;
   }
   get playState() {
     return this.getAttribute('play-state') || 'running';
@@ -523,10 +527,26 @@ class BlinkWc extends HTMLElement {
     this._stepRAF = null;
   }
 
-  // Multi-step engine: advance data-step="0..N-1" across one cycle (`rate`),
-  // holding each step for an equal slice. CSS styles each step, so a step can
-  // change colour, transform, outline, etc. — a plain blink is the 2-step case.
-  // Freezes when paused/off-screen/tab-hidden; rests at step 0 under reduced motion.
+  // Parse `step-durations` into per-step weights, one per step. Accepts a
+  // space- or comma-separated list (e.g. "3 1 1" or "2,1"); the list is cycled
+  // or truncated to fit the step count. Absent/invalid → equal weights.
+  _stepWeights(n) {
+    const raw = this.stepDurations;
+    if (!raw) return Array(n).fill(1);
+    const parts = raw
+      .split(/[\s,]+/)
+      .map(Number)
+      .filter((v) => Number.isFinite(v) && v > 0);
+    if (parts.length === 0) return Array(n).fill(1);
+    return Array.from({ length: n }, (_, i) => parts[i % parts.length]);
+  }
+
+  // Multi-step engine: advance data-step="0..N-1" across one cycle (`rate`). Each
+  // step holds for a slice of the cycle — equal by default, or weighted by
+  // `step-durations`. CSS styles each step (colour, transform, outline, …) and
+  // can give each step its own transition timing (--blink-step-ease /
+  // --blink-step-timing); a plain blink is the 2-step case. Freezes when
+  // paused/off-screen/tab-hidden; rests at step 0 under reduced motion.
   _syncSteps() {
     this._stopSteps();
     if (!this._usesSteps()) {
@@ -544,7 +564,17 @@ class BlinkWc extends HTMLElement {
       return;
     }
 
-    const per = this._parseTime(this.rate) / n; // ms per step
+    // Build cumulative time boundaries (ms) for each step from its weight.
+    const weights = this._stepWeights(n);
+    const total = weights.reduce((a, b) => a + b, 0);
+    const cycleMs = this._parseTime(this.rate);
+    const bounds = [];
+    let acc = 0;
+    for (const w of weights) {
+      acc += w;
+      bounds.push((acc / total) * cycleMs);
+    }
+
     let elapsed = 0;
     let lastT = null;
     let prev = 0;
@@ -556,7 +586,9 @@ class BlinkWc extends HTMLElement {
       lastT = t;
       if (this._isPaused()) return; // freeze the timeline while paused
       elapsed += dt;
-      const idx = Math.floor(elapsed / per) % n;
+      const pos = elapsed % cycleMs;
+      let idx = 0;
+      while (idx < n - 1 && pos >= bounds[idx]) idx++;
       if (idx !== prev) {
         this.dataset.step = String(idx);
         if (idx < prev) this._dispatch('blink-cycle'); // wrapped back to the start
