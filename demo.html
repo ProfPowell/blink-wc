@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>&lt;blink-wc&gt; — Vanilla Breeze demo</title>
+    <link rel="stylesheet" href="src/blink-wc.css" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: oklch(98% 0.005 250);
+        --fg: oklch(20% 0.02 250);
+        --muted: oklch(60% 0.02 250);
+        --border: oklch(85% 0.01 250);
+        --accent: oklch(55% 0.18 250);
+        --code-bg: oklch(95% 0.01 250);
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: oklch(15% 0.02 250);
+          --fg: oklch(95% 0.01 250);
+          --muted: oklch(60% 0.02 250);
+          --border: oklch(28% 0.02 250);
+          --code-bg: oklch(20% 0.02 250);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 2rem 1.5rem 6rem;
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.5;
+        max-width: 70rem;
+        margin-inline: auto;
+      }
+      h1 {
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+        margin: 0 0 0.5rem;
+      }
+      h2 {
+        margin: 3rem 0 0.5rem;
+        font-size: 1.25rem;
+        border-block-end: 1px solid var(--border);
+        padding-block-end: 0.5rem;
+      }
+      p {
+        color: var(--muted);
+        margin: 0 0 1rem;
+      }
+      code {
+        font-family: ui-monospace, monospace;
+        background: var(--code-bg);
+        padding: 0.1em 0.3em;
+        border-radius: 0.25em;
+        font-size: 0.9em;
+      }
+      .stage {
+        font-size: 2rem;
+        font-weight: 800;
+        padding: 1.5rem;
+        background: var(--code-bg);
+        border-radius: 0.5rem;
+        margin-block: 0.5rem 1.5rem;
+        text-align: center;
+      }
+      .controls {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-block: 0.75rem 1rem;
+      }
+      .controls button {
+        padding: 0.4rem 0.9rem;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--fg);
+        border-radius: 0.4rem;
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+      .controls button:hover {
+        border-color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>&lt;blink-wc&gt;</h1>
+    <p>The &lt;blink&gt; tag reborn for 2026 — accessible, themeable, and CSS-driven.</p>
+
+    <!-- ── 1. Legacy emulation ───────────────────────────────────────────── -->
+    <h2>1. Legacy &lt;blink&gt; emulation</h2>
+    <p>Drop-in mental model. The classic on/off blink — but pausable and reduced-motion safe.</p>
+    <div class="stage"><blink-wc>This is what the old &lt;blink&gt; looked like.</blink-wc></div>
+
+    <!-- ── 2. Behaviors ──────────────────────────────────────────────────── -->
+    <h2>2. Behaviors — <code>blink</code>, <code>pulse</code>, <code>flicker</code></h2>
+    <p>Three ways to blink. <code>rate</code> sets the cycle time.</p>
+    <div class="stage">
+      <blink-wc behavior="blink" rate="0.8s">blink</blink-wc> ·
+      <blink-wc behavior="pulse" rate="2s">pulse</blink-wc> ·
+      <blink-wc behavior="flicker" rate="3s">flicker</blink-wc>
+    </div>
+
+    <!-- ── 3. Neon ───────────────────────────────────────────────────────── -->
+    <h2>3. <code>mode="neon"</code></h2>
+    <p>A buzzing neon sign. Reads <code>--color-accent</code>.</p>
+    <div class="stage"><blink-wc mode="neon">OPEN ALL NIGHT</blink-wc></div>
+
+    <!-- ── 4. CRT + terminal ─────────────────────────────────────────────── -->
+    <h2>4. <code>mode="crt"</code> and <code>mode="terminal"</code></h2>
+    <p>Green phosphor glow, and steady text with a blinking block cursor.</p>
+    <div class="stage" style="font-size: 1.25rem">
+      <blink-wc mode="crt" behavior="flicker" rate="4s">SYSTEM READY</blink-wc>
+    </div>
+    <div class="stage" style="font-size: 1.25rem">
+      <blink-wc mode="terminal">C:\&gt; _</blink-wc>
+    </div>
+
+    <!-- ── 5. Warning / alert / police ───────────────────────────────────── -->
+    <h2>5. <code>mode="warning"</code>, <code>"alert"</code>, <code>"police"</code></h2>
+    <p>Attention-grabbing panels.</p>
+    <div class="stage" style="font-size: 1.25rem">
+      <blink-wc mode="warning" rate="0.8s">⚠ Low Battery</blink-wc>
+    </div>
+    <div class="stage" style="font-size: 1.25rem">
+      <blink-wc mode="alert" rate="0.6s">● REC</blink-wc>
+    </div>
+    <div class="stage" style="font-size: 1.25rem">
+      <blink-wc mode="police" rate="0.5s">PULL OVER</blink-wc>
+    </div>
+
+    <!-- ── 6. Morse ──────────────────────────────────────────────────────── -->
+    <h2>6. <code>mode="morse"</code></h2>
+    <p>
+      The text is blinked out as International Morse code, with the dot/dash transcription below.
+    </p>
+    <div class="stage" style="font-size: 1.5rem"><blink-wc mode="morse">SOS</blink-wc></div>
+
+    <!-- ── 7. Per-unit motion ────────────────────────────────────────────── -->
+    <h2>7. Per-unit motion modes</h2>
+    <p>Each letter (or word) blinks on its own staggered timing.</p>
+    <div class="stage"><blink-wc mode="wave">catch the wave</blink-wc></div>
+    <div class="stage"><blink-wc mode="twinkle">twinkle twinkle</blink-wc></div>
+    <div class="stage"><blink-wc mode="sparkle">✦ sparkle ✦</blink-wc></div>
+    <div class="stage"><blink-wc mode="rainbow">taste the rainbow</blink-wc></div>
+    <div class="stage"><blink-wc mode="chase">chasing lights</blink-wc></div>
+    <div class="stage"><blink-wc mode="cascade" unit="word">a soft falling cascade</blink-wc></div>
+    <div class="stage"><blink-wc mode="typewriter">now typing&hellip;</blink-wc></div>
+
+    <!-- ── 8. Programmatic control ───────────────────────────────────────── -->
+    <h2>8. Programmatic control (legacy API compat)</h2>
+    <p><code>start()</code>, <code>stop()</code>, <code>toggle()</code> — just like the old tag.</p>
+    <div class="stage"><blink-wc id="ctrl-demo">Control me with the buttons.</blink-wc></div>
+    <div class="controls">
+      <button onclick="document.getElementById('ctrl-demo').start()">start()</button>
+      <button onclick="document.getElementById('ctrl-demo').stop()">stop()</button>
+      <button onclick="document.getElementById('ctrl-demo').toggle()">toggle()</button>
+      <button id="cycle-count">cycles: 0</button>
+    </div>
+
+    <h2>Defensive defaults</h2>
+    <p>Try the following — each is a "thing the old &lt;blink&gt; never did":</p>
+    <ul>
+      <li>Switch to another tab and back. The blinks were paused while hidden.</li>
+      <li>Scroll a blink off-screen. It stops until it returns to the viewport.</li>
+      <li>
+        Enable <em>reduced motion</em> in your OS. Every blink stops and the text is shown fully,
+        unless <code>reduced-motion="ignore"</code>.
+      </li>
+    </ul>
+
+    <script type="module" src="src/blink-wc.js"></script>
+    <script>
+      let cycleCount = 0;
+      document.getElementById('ctrl-demo').addEventListener('blink-cycle', () => {
+        cycleCount++;
+        document.getElementById('cycle-count').textContent = `cycles: ${cycleCount}`;
+      });
+    </script>
+  </body>
+</html>

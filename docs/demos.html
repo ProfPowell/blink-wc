@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230a66c2'/%3E%3Ccircle cx='8' cy='8' r='3' fill='white'/%3E%3C/svg%3E"
+    />
+    <title>Demos — blink-wc</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/profpowell/vanilla-breeze@main/dist/cdn/vanilla-breeze.css"
+    />
+    <script>
+      // Vanilla Breeze theme-picker base. Also shim its hardcoded /cdn/* fetches
+      // (e.g. themes/manifest.json) onto the CDN so they resolve on GitHub Pages.
+      window.__VB_THEME_BASE =
+        'https://cdn.jsdelivr.net/gh/profpowell/vanilla-breeze@main/dist/cdn';
+      (function () {
+        const CDN = window.__VB_THEME_BASE;
+        const origFetch = window.fetch.bind(window);
+        window.fetch = (input, init) => {
+          const url = typeof input === 'string' ? input : input && input.url;
+          if (typeof url === 'string' && url.startsWith('/cdn/')) {
+            return origFetch(CDN + url.slice(4), init);
+          }
+          return origFetch(input, init);
+        };
+      })();
+    </script>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/gh/profpowell/vanilla-breeze@main/dist/cdn/components/theme-picker.js"
+    ></script>
+
+    <link rel="stylesheet" href="blink-wc.css" />
+    <script type="module" src="blink-wc.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav>
+      <span class="logo">&lt;blink-wc&gt;</span>
+      <span class="links">
+        <a href="index.html">Home</a>
+        <a href="demos.html" class="active">Demos</a>
+        <a href="api.html">API</a>
+        <a href="https://github.com/profpowell/blink-wc">GitHub</a>
+      </span>
+      <span class="spacer"></span>
+      <theme-picker compact>
+        <button type="button" data-trigger class="ghost vb-theme-trigger">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+            <path
+              d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.012 17.5 2 12 2z"
+            />
+          </svg>
+          Theme
+        </button>
+      </theme-picker>
+    </nav>
+
+    <main>
+      <section class="hero" style="padding-block: 2rem 0">
+        <h1 style="font-size: clamp(1.75rem, 5vw, 2.75rem)">Demos</h1>
+        <p class="tagline">
+          Every behavior, theme, and mode. Open the <strong>theme picker</strong> to watch the
+          themed variants re-skin with Vanilla Breeze.
+        </p>
+      </section>
+
+      <section>
+        <h2>1. Legacy <code>&lt;blink&gt;</code> emulation</h2>
+        <p>
+          Drop-in mental model. The classic on/off blink — but pausable and reduced-motion safe.
+        </p>
+        <div class="demo"><blink-wc>This is what the old &lt;blink&gt; looked like.</blink-wc></div>
+      </section>
+
+      <section>
+        <h2>2. Behaviors</h2>
+        <p>
+          <code>blink</code> (hard on/off), <code>pulse</code> (soft fade),
+          <code>flicker</code> (irregular flutter). <code>rate</code> sets the cycle time.
+        </p>
+        <h3><code>behavior="blink"</code></h3>
+        <div class="demo"><blink-wc behavior="blink" rate="0.8s">classic blink</blink-wc></div>
+        <h3><code>behavior="pulse"</code></h3>
+        <div class="demo"><blink-wc behavior="pulse" rate="2s">soft pulse</blink-wc></div>
+        <h3><code>behavior="flicker"</code></h3>
+        <div class="demo"><blink-wc behavior="flicker" rate="3s">tired fluorescent</blink-wc></div>
+      </section>
+
+      <section>
+        <h2>3. <code>count</code> — finite blinks, then stop</h2>
+        <p>Blink three times to grab attention, then settle. Reload to replay.</p>
+        <div class="demo"><blink-wc count="3" rate="0.5s">Look here!</blink-wc></div>
+      </section>
+
+      <section>
+        <h2>4. Surface themes</h2>
+
+        <h3><code>mode="neon"</code> — a buzzing neon sign</h3>
+        <div class="demo"><blink-wc mode="neon">OPEN ALL NIGHT</blink-wc></div>
+
+        <h3><code>mode="crt"</code> — green phosphor glow</h3>
+        <div class="demo">
+          <blink-wc mode="crt" behavior="flicker" rate="4s">SYSTEM READY</blink-wc>
+        </div>
+
+        <h3><code>mode="terminal"</code> — steady text, blinking cursor</h3>
+        <div class="demo"><blink-wc mode="terminal">C:\&gt; _</blink-wc></div>
+
+        <h3><code>mode="warning"</code> — amber hazard panel</h3>
+        <div class="demo"><blink-wc mode="warning" rate="0.8s">⚠ Low Battery</blink-wc></div>
+
+        <h3><code>mode="alert"</code> — flashing red banner</h3>
+        <div class="demo"><blink-wc mode="alert" rate="0.6s">● REC</blink-wc></div>
+
+        <h3><code>mode="police"</code> — alternating red/blue</h3>
+        <div class="demo"><blink-wc mode="police" rate="0.5s">PULL OVER</blink-wc></div>
+
+        <h3><code>mode="vegas"</code> — a glowing gold sign</h3>
+        <div class="demo"><blink-wc mode="vegas" rate="1.2s">JACKPOT</blink-wc></div>
+      </section>
+
+      <section>
+        <h2>5. <code>mode="morse"</code> — blink it out in code</h2>
+        <p>
+          The text is blinked out as International Morse code, driven by a small
+          <code>requestAnimationFrame</code> loop. The dot/dash transcription shows below.
+        </p>
+        <div class="demo"><blink-wc mode="morse">SOS</blink-wc></div>
+        <div class="demo"><blink-wc mode="morse">HELLO WORLD</blink-wc></div>
+      </section>
+
+      <section>
+        <h2>6. Per-unit motion modes</h2>
+        <p>
+          These split the text into per-character spans and animate each with a staggered delay, so
+          the effect ripples across the words. Add <code>unit="word"</code> to animate whole words.
+        </p>
+
+        <h3><code>mode="wave"</code> — a blink travels across</h3>
+        <div class="demo"><blink-wc mode="wave">catch the wave</blink-wc></div>
+
+        <h3><code>mode="twinkle"</code> — each letter on its own clock</h3>
+        <div class="demo"><blink-wc mode="twinkle">twinkle twinkle little star</blink-wc></div>
+
+        <h3><code>mode="sparkle"</code> — twinkle with a glint</h3>
+        <div class="demo"><blink-wc mode="sparkle">✦ sparkle ✦</blink-wc></div>
+
+        <h3><code>mode="rainbow"</code> — spectrum, blinking</h3>
+        <div class="demo"><blink-wc mode="rainbow">taste the rainbow</blink-wc></div>
+
+        <h3><code>mode="chase"</code> — theater-marquee chase</h3>
+        <div class="demo"><blink-wc mode="chase">chasing lights around</blink-wc></div>
+
+        <h3><code>mode="glitch"</code> — jittery chromatic blink</h3>
+        <div class="demo"><blink-wc mode="glitch">s y s t e m _ e r r o r</blink-wc></div>
+
+        <h3><code>mode="cascade"</code> — a soft falling pulse</h3>
+        <div class="demo"><blink-wc mode="cascade">a soft falling cascade</blink-wc></div>
+
+        <h3><code>mode="typewriter"</code> — typed out with a caret</h3>
+        <div class="demo"><blink-wc mode="typewriter">now typing&hellip;</blink-wc></div>
+      </section>
+
+      <section>
+        <h2>7. <code>unit="word"</code> — animate whole words</h2>
+        <p>Any per-unit mode can run per <strong>word</strong> instead of per letter.</p>
+        <h3><code>mode="cascade" unit="word"</code></h3>
+        <div class="demo"><blink-wc mode="cascade" unit="word">one word at a time</blink-wc></div>
+        <h3><code>mode="twinkle" unit="word"</code></h3>
+        <div class="demo">
+          <blink-wc mode="twinkle" unit="word">whole words twinkling now</blink-wc>
+        </div>
+      </section>
+
+      <section>
+        <h2>8. Programmatic control</h2>
+        <p>
+          <code>start()</code>, <code>stop()</code>, and <code>toggle()</code> work just like the
+          old <code>&lt;blink&gt;</code>. The component also fires <code>blink-cycle</code> on each
+          blink.
+        </p>
+        <div class="demo"><blink-wc id="ctrl">Control me with the buttons.</blink-wc></div>
+        <div class="controls">
+          <button onclick="document.getElementById('ctrl').start()">start()</button>
+          <button onclick="document.getElementById('ctrl').stop()">stop()</button>
+          <button onclick="document.getElementById('ctrl').toggle()">toggle()</button>
+          <button id="cycle-count">cycles: 0</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        <code>&lt;blink-wc&gt;</code> is part of the
+        <a href="https://vanilla-breeze.com">Vanilla Breeze</a> family of vanilla web components.
+      </p>
+      <p>MIT licensed.</p>
+    </footer>
+
+    <script>
+      let cycles = 0;
+      document.getElementById('ctrl').addEventListener('blink-cycle', () => {
+        document.getElementById('cycle-count').textContent = `cycles: ${++cycles}`;
+      });
+    </script>
+  </body>
+</html>

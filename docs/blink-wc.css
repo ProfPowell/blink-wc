@@ -1,0 +1,431 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * <blink-wc> — Vanilla Breeze component styles
+ *
+ * Theming hooks (CSS custom properties):
+ *   --blink-rate        : duration of one blink cycle (set by JS from `rate`)
+ *   --blink-min-opacity : opacity of the "off" phase (set by JS from min-opacity)
+ *   --blink-count       : iteration count (set by JS from `count`)
+ *   --blink-stagger     : per-unit delay step for letter modes (default 0.08s)
+ *   --blink-dot         : Morse dot unit in ms (read by JS; default 170)
+ *   --blink-bg, --blink-fg : background/foreground for themed variants
+ *   --blink-glow        : glow radius for themed variants
+ *
+ * Vanilla Breeze integration:
+ *   Themed variants read VB design tokens (--color-surface, --color-text,
+ *   --color-error, --color-warning, --color-success, --color-accent,
+ *   --font-mono, --font-sans, --radius-m, …) via layered var() fallbacks. A
+ *   --blink-* override always wins; absent that, a VB token is used; absent
+ *   that, a sensible built-in default applies. Pages running a VB theme get a
+ *   matching blink automatically, with zero config.
+ *
+ * State hooks (data-* set by JS):
+ *   data-behavior    : blink | pulse | flicker
+ *   data-state       : running | paused
+ *   data-split       : present when text is split into per-unit spans
+ *   data-lit         : true | false (morse mode)
+ *   data-visible     : true | false (IntersectionObserver)
+ *   data-tab-visible : true | false (Page Visibility)
+ * ──────────────────────────────────────────────────────────────────────── */
+
+blink-wc {
+  display: inline-block;
+  --blink-rate: 1s;
+  --blink-stagger: 0.08s;
+}
+
+/* Unupgraded fallback: render content statically, no animation */
+blink-wc:not(:defined),
+blink-wc:not([data-ready]) {
+  display: inline-block;
+}
+
+blink-wc .blink-content {
+  display: inline-block;
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────────── */
+
+/* blink — the classic: hard on/off, no easing */
+@keyframes blink-wc-blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: var(--blink-min-opacity, 0);
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* pulse — a soft breathing fade in and out */
+@keyframes blink-wc-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: var(--blink-min-opacity, 0.2);
+  }
+}
+
+/* flicker — irregular, mostly-on flutter, like a tired fluorescent tube */
+@keyframes blink-wc-flicker {
+  0%,
+  19%,
+  23%,
+  54%,
+  57%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  22%,
+  55%,
+  56% {
+    opacity: var(--blink-min-opacity, 0.25);
+  }
+}
+
+/* ─── Core behavior application (whole-text blink) ───────────────────── */
+
+blink-wc[data-behavior='blink'] .blink-content {
+  animation: blink-wc-blink var(--blink-rate, 1s) step-end var(--blink-count, infinite);
+}
+blink-wc[data-behavior='pulse'] .blink-content {
+  animation: blink-wc-pulse var(--blink-rate, 1s) ease-in-out var(--blink-count, infinite);
+}
+blink-wc[data-behavior='flicker'] .blink-content {
+  animation: blink-wc-flicker var(--blink-rate, 1s) step-end var(--blink-count, infinite);
+}
+
+/* Per-unit and morse modes drive their own animation — silence the whole-text
+   blink on the content. (Placed after the behavior rules so it wins the tie.) */
+blink-wc[data-split] .blink-content,
+blink-wc[mode='morse'] .blink-content {
+  animation: none;
+}
+
+/* ─── Pause states ───────────────────────────────────────────────────── */
+
+/* !important: the per-behavior `animation` shorthand resets play-state to
+   running, so the pause overrides must beat it regardless of specificity. */
+blink-wc[data-state='paused'] :is(.blink-content, .blink-char),
+blink-wc[data-visible='false'] :is(.blink-content, .blink-char),
+blink-wc[data-tab-visible='false'] :is(.blink-content, .blink-char) {
+  animation-play-state: paused !important;
+}
+blink-wc[pause-on-hover]:where(:hover, :focus-within) :is(.blink-content, .blink-char) {
+  animation-play-state: paused !important;
+}
+blink-wc[pause-on-hover] {
+  cursor: default;
+}
+
+/* ─── Accessibility: prefers-reduced-motion ──────────────────────────── */
+
+/* Blinking and flashing content is a genuine accessibility hazard, so by
+   default everything stops and the text is shown fully — opt out with
+   reduced-motion="ignore". */
+@media (prefers-reduced-motion: reduce) {
+  blink-wc:not([reduced-motion='ignore']) :is(.blink-content, .blink-char) {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  blink-wc:not([reduced-motion='ignore'])[mode='morse'] .blink-content {
+    opacity: 1 !important;
+    text-shadow: 0 0 0.4em currentColor;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Surface themes
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/* ─── neon — a buzzing neon sign that flickers on with a colored glow ──── */
+blink-wc[mode='neon'] {
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--blink-fg, var(--color-accent, var(--color-primary, oklch(72% 0.2 330))));
+}
+blink-wc[mode='neon'] .blink-content {
+  animation: blink-wc-neon var(--blink-rate, 3s) step-end infinite;
+}
+@keyframes blink-wc-neon {
+  0%,
+  18%,
+  22%,
+  25%,
+  53%,
+  57%,
+  100% {
+    opacity: 1;
+    text-shadow:
+      0 0 0.3em currentColor,
+      0 0 0.8em currentColor,
+      0 0 1.5em currentColor;
+  }
+  20%,
+  24%,
+  55% {
+    opacity: 0.4;
+    text-shadow: none;
+  }
+}
+
+/* ─── crt — green phosphor terminal glow over faint scanlines ──────────── */
+blink-wc[mode='crt'] {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: var(--blink-fg, var(--color-success, oklch(85% 0.2 145)));
+  background-color: var(--blink-bg, var(--color-background, oklch(15% 0.02 150)));
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-m, 0.4rem);
+  text-shadow: 0 0 0.3em currentColor;
+  background-image: repeating-linear-gradient(
+    0deg,
+    color-mix(in oklch, currentColor 8%, transparent) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* ─── terminal — steady text with a blinking block cursor ──────────────── */
+blink-wc[mode='terminal'] {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: var(--blink-fg, var(--color-text, oklch(90% 0.02 150)));
+  background-color: var(
+    --blink-bg,
+    var(--color-surface-sunken, var(--color-surface, oklch(16% 0.01 250)))
+  );
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-m, 0.4rem);
+}
+blink-wc[mode='terminal'] .blink-content {
+  animation: none;
+}
+blink-wc[mode='terminal'] .blink-content::after {
+  content: '▋';
+  margin-inline-start: 0.1em;
+  color: var(--color-accent, var(--color-success, oklch(80% 0.2 145)));
+  animation: blink-wc-blink var(--blink-rate, 1s) step-end infinite;
+}
+
+/* ─── warning — amber hazard panel that blinks for attention ───────────── */
+blink-wc[mode='warning'] {
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--blink-fg, oklch(22% 0.04 80));
+  background: var(--blink-bg, var(--color-warning, oklch(82% 0.17 85)));
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-m, 0.4rem);
+}
+
+/* ─── alert — a flashing red error banner ──────────────────────────────── */
+blink-wc[mode='alert'] {
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--blink-fg, white);
+  background: var(--blink-bg, var(--color-error, oklch(55% 0.22 25)));
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-m, 0.4rem);
+}
+
+/* ─── police — alternating red/blue light bar ──────────────────────────── */
+blink-wc[mode='police'] {
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: white;
+}
+blink-wc[mode='police'] .blink-content {
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-m, 0.4rem);
+  animation: blink-wc-police var(--blink-rate, 0.8s) step-end infinite;
+}
+@keyframes blink-wc-police {
+  0% {
+    background: oklch(55% 0.25 25);
+    box-shadow: 0 0 1.5em oklch(55% 0.25 25);
+  }
+  50% {
+    background: oklch(55% 0.2 265);
+    box-shadow: 0 0 1.5em oklch(55% 0.2 265);
+  }
+}
+
+/* ─── vegas — a glowing gold marquee sign ──────────────────────────────── */
+blink-wc[mode='vegas'] {
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--blink-fg, oklch(92% 0.15 90));
+}
+blink-wc[mode='vegas'] .blink-content {
+  animation: blink-wc-vegas var(--blink-rate, 1.2s) ease-in-out infinite;
+}
+@keyframes blink-wc-vegas {
+  0%,
+  100% {
+    text-shadow:
+      0 0 0.3em currentColor,
+      0 0 0.7em currentColor;
+  }
+  50% {
+    opacity: var(--blink-min-opacity, 0.55);
+    text-shadow: none;
+  }
+}
+
+/* ─── morse — blink the text out as Morse code, with a dot/dash caption ──── */
+blink-wc[mode='morse'] {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: var(--blink-fg, var(--color-success, oklch(85% 0.2 145)));
+}
+blink-wc[mode='morse'] .blink-content {
+  opacity: var(--blink-min-opacity, 0.12);
+  transition: opacity 60ms linear;
+}
+blink-wc[mode='morse'][data-lit='true'] .blink-content {
+  opacity: 1;
+  text-shadow:
+    0 0 0.35em currentColor,
+    0 0 0.8em currentColor;
+}
+blink-wc[mode='morse']::after {
+  content: attr(data-morse);
+  display: block;
+  margin-block-start: 0.4rem;
+  font-size: 0.75em;
+  letter-spacing: 0.12em;
+  opacity: 0.55;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Per-unit motion modes
+ *
+ * For the letter modes the component wraps every character (or word, with
+ * unit="word") in <span class="blink-char" style="--i:N">. The --i index
+ * staggers each unit so the effect ripples across the text. Whitespace
+ * becomes <span class="blink-char blink-space">.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+blink-wc[data-split] .blink-char {
+  display: inline-block;
+  white-space: pre;
+}
+
+/* wave — a hard blink that travels across the units, one after another */
+blink-wc[mode='wave'] .blink-char {
+  animation: blink-wc-blink var(--blink-rate, 1.2s) step-end infinite;
+  animation-delay: calc((var(--i, 0) / var(--n, 1)) * var(--blink-rate, 1.2s));
+}
+
+/* twinkle — every unit blinks on its own random clock, like a field of stars */
+blink-wc[mode='twinkle'] .blink-char {
+  animation: blink-wc-blink var(--rate, 1s) step-end infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* sparkle — twinkle with a glinting scale + glow */
+blink-wc[mode='sparkle'] .blink-char {
+  animation: blink-wc-sparkle var(--rate, 1.2s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes blink-wc-sparkle {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.18);
+    text-shadow: 0 0 0.5em currentColor;
+  }
+}
+
+/* rainbow — each unit a hue of the spectrum, blinking as the colors cycle */
+blink-wc[mode='rainbow'] .blink-char {
+  color: hsl(calc(var(--i, 0) * 30deg) 90% 60%);
+  animation:
+    blink-wc-blink var(--blink-rate, 1s) step-end infinite,
+    blink-wc-hue 2.4s linear infinite;
+  animation-delay: calc(var(--i, 0) * -0.06s);
+}
+@keyframes blink-wc-hue {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* chase — a single lit unit sweeps along the row, theater-marquee style */
+blink-wc[mode='chase'] .blink-char {
+  opacity: 0.25;
+  animation: blink-wc-chase 1.4s ease-in-out infinite;
+  animation-delay: calc((var(--i, 0) / var(--n, 1)) * 1.4s);
+}
+@keyframes blink-wc-chase {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  25% {
+    opacity: 1;
+    color: var(--color-accent, var(--color-primary, currentColor));
+    text-shadow: 0 0 0.55em currentColor;
+  }
+}
+
+/* glitch — units blink while jittering with a chromatic-aberration shadow */
+blink-wc[mode='glitch'] .blink-char {
+  text-shadow:
+    0.03em 0 oklch(60% 0.24 25 / 0.7),
+    -0.03em 0 oklch(70% 0.18 220 / 0.7);
+  animation: blink-wc-glitch 0.45s steps(2, jump-none) infinite;
+  animation-delay: calc(var(--i, 0) * -0.05s);
+}
+@keyframes blink-wc-glitch {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(0.04em, -0.04em);
+    opacity: 0.55;
+  }
+  60% {
+    transform: translate(-0.04em, 0.03em);
+    opacity: 1;
+  }
+}
+
+/* cascade — a soft fade pulse rippling unit-to-unit */
+blink-wc[mode='cascade'] .blink-char {
+  animation: blink-wc-pulse var(--blink-rate, 1.4s) ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.08s));
+}
+
+/* typewriter — units appear one by one, with a blinking caret at the end */
+blink-wc[mode='typewriter'] .blink-char {
+  opacity: 0;
+  animation: blink-wc-type 0.01s step-end forwards;
+  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.12s));
+}
+@keyframes blink-wc-type {
+  to {
+    opacity: 1;
+  }
+}
+blink-wc[mode='typewriter'] .blink-content::after {
+  content: '▋';
+  margin-inline-start: 0.05em;
+  color: var(--color-accent, currentColor);
+  animation: blink-wc-blink var(--blink-rate, 1s) step-end infinite;
+}

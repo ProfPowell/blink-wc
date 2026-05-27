@@ -1,0 +1,319 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * <blink-wc> documentation site
+ *
+ * Built on Vanilla Breeze design tokens so the entire page — and every
+ * <blink-wc> theme on it — re-themes live when you switch themes with the
+ * <theme-picker>. Every token has a standalone fallback, so the page still
+ * renders if Vanilla Breeze fails to load.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  background: var(--color-background, oklch(98% 0.005 250));
+  color: var(--color-text, oklch(20% 0.02 250));
+  line-height: 1.6;
+}
+
+a {
+  color: var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  color: var(--color-text, oklch(20% 0.02 250));
+}
+
+/* ─── Navigation ─────────────────────────────────────────────────────── */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.85rem 1.5rem;
+  background: var(--color-surface, oklch(96% 0.01 250));
+  border-block-end: 1px solid var(--color-border, oklch(85% 0.01 250));
+}
+nav .logo {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+}
+nav .links {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+nav .links a {
+  color: var(--color-text, oklch(20% 0.02 250));
+}
+nav .links a.active {
+  color: var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+}
+nav .spacer {
+  flex: 1;
+}
+
+/* Theme-picker trigger button (matches the vanilla-breeze.com header pattern) */
+.vb-theme-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text, oklch(20% 0.02 250));
+  background: transparent;
+  border: 1px solid var(--color-border, oklch(85% 0.01 250));
+  border-radius: var(--radius-m, 0.5rem);
+}
+.vb-theme-trigger:hover {
+  color: var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+  border-color: var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+}
+.vb-theme-trigger svg {
+  display: block;
+}
+
+/* ─── Layout ─────────────────────────────────────────────────────────── */
+main {
+  max-width: 64rem;
+  margin-inline: auto;
+  padding: 2rem 1.5rem 6rem;
+}
+section {
+  margin-block: 3.5rem;
+}
+section > p {
+  color: var(--color-text-muted, oklch(50% 0.02 250));
+  max-width: 48rem;
+}
+h2 {
+  font-size: 1.5rem;
+  border-block-end: 1px solid var(--color-border, oklch(85% 0.01 250));
+  padding-block-end: 0.5rem;
+}
+h3 {
+  font-size: 1.15rem;
+  margin-block: 2rem 0.5rem;
+}
+
+/* ─── Hero ───────────────────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  padding-block: 3rem 1rem;
+}
+.hero h1 {
+  font-size: clamp(2.25rem, 7vw, 4rem);
+  margin: 0 0 0.5rem;
+}
+.hero .tagline {
+  font-size: 1.2rem;
+  color: var(--color-text-muted, oklch(50% 0.02 250));
+  max-width: 40rem;
+  margin: 0 auto 1.75rem;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────── */
+.btn-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn {
+  display: inline-block;
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--radius-m, 0.5rem);
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+  color: var(--color-background, white);
+}
+.btn:hover {
+  text-decoration: none;
+  filter: brightness(1.05);
+}
+.btn-secondary {
+  background: transparent;
+  border-color: var(--color-border, oklch(85% 0.01 250));
+  color: var(--color-text, oklch(20% 0.02 250));
+}
+
+/* ─── Cards / grid ───────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1.25rem;
+}
+.card {
+  background: var(--color-surface, oklch(96% 0.01 250));
+  border: 1px solid var(--color-border, oklch(85% 0.01 250));
+  border-radius: var(--radius-m, 0.5rem);
+  padding: 1.25rem;
+}
+.card h3 {
+  margin-block-start: 0;
+}
+
+/* ─── Callout (theme integration banner) ─────────────────────────────── */
+.callout {
+  background: var(--color-surface-raised, var(--color-surface, oklch(96% 0.01 250)));
+  border: 1px solid var(--color-border, oklch(85% 0.01 250));
+  border-inline-start: 4px solid var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+  border-radius: var(--radius-m, 0.5rem);
+  padding: 1rem 1.25rem;
+}
+.callout.warn {
+  border-inline-start-color: var(--color-warning, oklch(75% 0.15 80));
+}
+
+/* ─── Code ───────────────────────────────────────────────────────────── */
+code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  background: var(--color-surface-sunken, var(--color-surface, oklch(94% 0.01 250)));
+  padding: 0.12em 0.35em;
+  border-radius: 0.3em;
+  font-size: 0.9em;
+}
+pre {
+  background: var(--color-surface-sunken, var(--color-surface, oklch(94% 0.01 250)));
+  border: 1px solid var(--color-border, oklch(85% 0.01 250));
+  border-radius: var(--radius-m, 0.5rem);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Fallback while the <code-block> component is still upgrading */
+code-block {
+  display: block;
+  margin-block: 1rem;
+}
+code-block:not(:defined) {
+  white-space: pre;
+  overflow-x: auto;
+  padding: 1rem 1.25rem;
+  background: var(--color-surface-sunken, var(--color-surface, oklch(94% 0.01 250)));
+  border: 1px solid var(--color-border, oklch(85% 0.01 250));
+  border-radius: var(--radius-m, 0.5rem);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.88rem;
+}
+
+/* ─── Tables ─────────────────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-block: 1rem;
+  font-size: 0.95rem;
+}
+th,
+td {
+  text-align: start;
+  padding: 0.6rem 0.75rem;
+  border-block-end: 1px solid var(--color-border, oklch(85% 0.01 250));
+  vertical-align: top;
+}
+th {
+  color: var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+}
+td code {
+  white-space: nowrap;
+}
+
+/* ─── Feature list ───────────────────────────────────────────────────── */
+.feature-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 0.5rem 1.5rem;
+}
+.feature-list li {
+  padding: 0.45rem 0;
+  display: flex;
+  gap: 0.6rem;
+}
+.feature-list li::before {
+  content: '→';
+  color: var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+  font-weight: 700;
+}
+
+/* ─── Demo helpers ───────────────────────────────────────────────────── */
+.demo {
+  margin-block: 0.75rem 1.5rem;
+  padding: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-align: center;
+  background: var(--color-surface-sunken, var(--color-surface, oklch(94% 0.01 250)));
+  border: 1px solid var(--color-border, oklch(85% 0.01 250));
+  border-radius: var(--radius-m, 0.5rem);
+}
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-block: 0.75rem;
+}
+.controls button {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--color-border, oklch(85% 0.01 250));
+  background: var(--color-surface, oklch(96% 0.01 250));
+  color: var(--color-text, oklch(20% 0.02 250));
+  border-radius: var(--radius-m, 0.4rem);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+}
+.controls button:hover {
+  border-color: var(--color-accent, var(--color-primary, oklch(55% 0.18 250)));
+}
+
+/* ─── Footer ─────────────────────────────────────────────────────────── */
+footer {
+  border-block-start: 1px solid var(--color-border, oklch(85% 0.01 250));
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--color-text-muted, oklch(50% 0.02 250));
+}
+footer .ecosystem {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-block: 1rem;
+}
+
+@media (max-width: 40rem) {
+  nav {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}

@@ -1,0 +1,6 @@
+dist/
+docs/blink-wc.js
+docs/blink-wc.js.map
+docs/blink-wc.css
+custom-elements.json
+package-lock.json

@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230a66c2'/%3E%3Ccircle cx='8' cy='8' r='3' fill='white'/%3E%3C/svg%3E"
+    />
+    <title>API — blink-wc</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/profpowell/vanilla-breeze@main/dist/cdn/vanilla-breeze.css"
+    />
+    <script>
+      // Vanilla Breeze theme-picker base. Also shim its hardcoded /cdn/* fetches
+      // (e.g. themes/manifest.json) onto the CDN so they resolve on GitHub Pages.
+      window.__VB_THEME_BASE =
+        'https://cdn.jsdelivr.net/gh/profpowell/vanilla-breeze@main/dist/cdn';
+      (function () {
+        const CDN = window.__VB_THEME_BASE;
+        const origFetch = window.fetch.bind(window);
+        window.fetch = (input, init) => {
+          const url = typeof input === 'string' ? input : input && input.url;
+          if (typeof url === 'string' && url.startsWith('/cdn/')) {
+            return origFetch(CDN + url.slice(4), init);
+          }
+          return origFetch(input, init);
+        };
+      })();
+    </script>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/gh/profpowell/vanilla-breeze@main/dist/cdn/components/theme-picker.js"
+    ></script>
+
+    <link rel="stylesheet" href="blink-wc.css" />
+    <script type="module" src="blink-wc.js"></script>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/gh/profpowell/code-block@main/dist/code-block.js"
+    ></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav>
+      <span class="logo">&lt;blink-wc&gt;</span>
+      <span class="links">
+        <a href="index.html">Home</a>
+        <a href="demos.html">Demos</a>
+        <a href="api.html" class="active">API</a>
+        <a href="https://github.com/profpowell/blink-wc">GitHub</a>
+      </span>
+      <span class="spacer"></span>
+      <theme-picker compact>
+        <button type="button" data-trigger class="ghost vb-theme-trigger">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+            <path
+              d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.012 17.5 2 12 2z"
+            />
+          </svg>
+          Theme
+        </button>
+      </theme-picker>
+    </nav>
+
+    <main>
+      <section class="hero" style="padding-block: 2rem 0">
+        <h1 style="font-size: clamp(1.75rem, 5vw, 2.75rem)">API reference</h1>
+      </section>
+
+      <section id="attributes">
+        <h2>Attributes</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Attribute</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>rate</code></td>
+              <td>time</td>
+              <td><code>1s</code></td>
+              <td>CSS time for one blink cycle</td>
+            </tr>
+            <tr>
+              <td><code>behavior</code></td>
+              <td>string</td>
+              <td><code>blink</code></td>
+              <td><code>blink</code> | <code>pulse</code> | <code>flicker</code></td>
+            </tr>
+            <tr>
+              <td><code>min-opacity</code></td>
+              <td>number</td>
+              <td>per-mode</td>
+              <td>Opacity of the "off" phase (0–1)</td>
+            </tr>
+            <tr>
+              <td><code>count</code></td>
+              <td>number</td>
+              <td><code>infinite</code></td>
+              <td>Number of blinks, then stop</td>
+            </tr>
+            <tr>
+              <td><code>pause-on-hover</code></td>
+              <td>boolean</td>
+              <td>—</td>
+              <td>Also pauses on <code>:focus-within</code></td>
+            </tr>
+            <tr>
+              <td><code>play-state</code></td>
+              <td>string</td>
+              <td><code>running</code></td>
+              <td><code>running</code> | <code>paused</code></td>
+            </tr>
+            <tr>
+              <td><code>reduced-motion</code></td>
+              <td>string</td>
+              <td><code>respect</code></td>
+              <td><code>respect</code> | <code>ignore</code></td>
+            </tr>
+            <tr>
+              <td><code>mode</code></td>
+              <td>string</td>
+              <td>—</td>
+              <td>
+                Surface themes: <code>neon</code> | <code>crt</code> | <code>terminal</code> |
+                <code>warning</code> | <code>alert</code> | <code>police</code> |
+                <code>vegas</code>. Per-unit motion: <code>wave</code> | <code>twinkle</code> |
+                <code>sparkle</code> | <code>rainbow</code> | <code>chase</code> |
+                <code>glitch</code> | <code>cascade</code> | <code>typewriter</code>. Special:
+                <code>morse</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>unit</code></td>
+              <td>string</td>
+              <td><code>letter</code></td>
+              <td>
+                <code>letter</code> | <code>word</code> — granularity for the motion modes (animate
+                each letter, or each whole word)
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <strong>Per-unit motion modes</strong> split the text into per-unit spans and animate each
+          with a staggered delay. Set <code>unit="word"</code> to animate whole words instead of
+          letters. They honor <code>prefers-reduced-motion</code>.
+        </p>
+      </section>
+
+      <section id="methods">
+        <h2>Methods &amp; properties</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>start()</code></td>
+              <td>Play (sets <code>play-state="running"</code>)</td>
+            </tr>
+            <tr>
+              <td><code>stop()</code></td>
+              <td>Pause (sets <code>play-state="paused"</code>)</td>
+            </tr>
+            <tr>
+              <td><code>toggle()</code></td>
+              <td>Flip between running and paused</td>
+            </tr>
+            <tr>
+              <td><code>refresh()</code></td>
+              <td>Re-render content and recompute after dynamic content changes</td>
+            </tr>
+            <tr>
+              <td>
+                <code>rate</code>, <code>behavior</code>, <code>minOpacity</code>,
+                <code>count</code>, <code>playState</code>, <code>mode</code>, <code>unit</code>
+              </td>
+              <td>Readonly getters reflecting current configuration</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="events">
+        <h2>Events</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Fired when</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>blink-start</code></td>
+              <td>The blink starts (on connect and on resume)</td>
+            </tr>
+            <tr>
+              <td><code>blink-pause</code></td>
+              <td>The blink is paused</td>
+            </tr>
+            <tr>
+              <td><code>blink-cycle</code></td>
+              <td>Each blink iteration completes</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>All events bubble.</p>
+        <code-block language="javascript"
+          >el.addEventListener('blink-cycle', () =&gt; console.log('one blink
+          completed'));</code-block
+        >
+      </section>
+
+      <section id="css">
+        <h2>CSS custom properties</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--blink-rate</code></td>
+              <td>Duration of one cycle (also set via the <code>rate</code> attribute)</td>
+            </tr>
+            <tr>
+              <td><code>--blink-min-opacity</code></td>
+              <td>Opacity of the "off" phase</td>
+            </tr>
+            <tr>
+              <td><code>--blink-stagger</code></td>
+              <td>Per-unit delay step for the letter modes</td>
+            </tr>
+            <tr>
+              <td><code>--blink-dot</code></td>
+              <td>Morse dot unit, in milliseconds (default 170)</td>
+            </tr>
+            <tr>
+              <td><code>--blink-bg</code> / <code>--blink-fg</code></td>
+              <td>Themed-variant background / foreground</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="vanilla-breeze">
+        <h2>Vanilla Breeze integration</h2>
+        <p>
+          Themed variants read Vanilla Breeze design tokens through layered
+          <code>var()</code> fallbacks. A <code>--blink-*</code> override always wins; absent that,
+          the VB token is used; absent that, a built-in default applies — so non-VB pages render
+          identically.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Mode</th>
+              <th>Vanilla Breeze tokens consumed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>neon</code></td>
+              <td><code>--color-accent</code>, <code>--font-sans</code></td>
+            </tr>
+            <tr>
+              <td><code>crt</code></td>
+              <td>
+                <code>--color-success</code>, <code>--color-background</code>,
+                <code>--font-mono</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>terminal</code></td>
+              <td>
+                <code>--color-text</code>, <code>--color-surface-sunken</code>,
+                <code>--color-accent</code>, <code>--font-mono</code>, <code>--radius-m</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>warning</code></td>
+              <td><code>--color-warning</code>, <code>--font-sans</code></td>
+            </tr>
+            <tr>
+              <td><code>alert</code></td>
+              <td><code>--color-error</code>, <code>--font-sans</code></td>
+            </tr>
+            <tr>
+              <td><code>chase</code> / <code>rainbow</code></td>
+              <td><code>--color-accent</code> (the lit unit flashes to it)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          See it live on the <a href="index.html#theme-integration">home page</a> — open the theme
+          picker and switch themes.
+        </p>
+      </section>
+
+      <section id="accessibility">
+        <h2>Accessibility</h2>
+        <ul>
+          <li>
+            <code>prefers-reduced-motion: reduce</code> halts all animation and shows the text
+            fully, unless you set <code>reduced-motion="ignore"</code>.
+          </li>
+          <li>The blink pauses when off-screen and when the tab is hidden.</li>
+          <li>
+            <code>pause-on-hover</code> also pauses on keyboard focus (<code>:focus-within</code>).
+          </li>
+          <li>
+            Avoid fast, large-area blinking, which can trigger photosensitive seizures — keep
+            flashes below ~3 Hz and small.
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        <code>&lt;blink-wc&gt;</code> is part of the
+        <a href="https://vanilla-breeze.com">Vanilla Breeze</a> family of vanilla web components.
+      </p>
+      <p>MIT licensed.</p>
+    </footer>
+  </body>
+</html>

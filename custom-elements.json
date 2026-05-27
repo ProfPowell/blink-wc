@@ -1,0 +1,198 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "src/blink-wc.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "BlinkWc",
+          "members": [
+            {
+              "kind": "field",
+              "name": "rate",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "behavior",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "minOpacity",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "count",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "playState",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "mode",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "unit",
+              "readonly": true
+            },
+            {
+              "kind": "method",
+              "name": "start"
+            },
+            {
+              "kind": "method",
+              "name": "stop"
+            },
+            {
+              "kind": "method",
+              "name": "toggle"
+            },
+            {
+              "kind": "method",
+              "name": "refresh"
+            },
+            {
+              "kind": "method",
+              "name": "_build"
+            },
+            {
+              "kind": "method",
+              "name": "_renderContent"
+            },
+            {
+              "kind": "method",
+              "name": "_splitLetters"
+            },
+            {
+              "kind": "method",
+              "name": "_tokenizeWords",
+              "parameters": [
+                {
+                  "name": "text"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "_isPaused"
+            },
+            {
+              "kind": "method",
+              "name": "_stopMorse"
+            },
+            {
+              "kind": "method",
+              "name": "_syncMorse"
+            },
+            {
+              "kind": "method",
+              "name": "_morseSegments",
+              "parameters": [
+                {
+                  "name": "text"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "_toMorse",
+              "parameters": [
+                {
+                  "name": "text"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "_observe"
+            },
+            {
+              "kind": "method",
+              "name": "_update"
+            },
+            {
+              "kind": "method",
+              "name": "_dispatch",
+              "parameters": [
+                {
+                  "name": "name"
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "name": "name",
+              "type": {
+                "text": "CustomEvent"
+              }
+            }
+          ],
+          "attributes": [
+            {
+              "name": "rate"
+            },
+            {
+              "name": "behavior"
+            },
+            {
+              "name": "min-opacity"
+            },
+            {
+              "name": "count"
+            },
+            {
+              "name": "play-state"
+            },
+            {
+              "name": "pause-on-hover"
+            },
+            {
+              "name": "reduced-motion"
+            },
+            {
+              "name": "mode"
+            },
+            {
+              "name": "unit"
+            }
+          ],
+          "superclass": {
+            "name": "HTMLElement"
+          },
+          "tagName": "blink-wc",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "blink-wc",
+          "declaration": {
+            "name": "BlinkWc",
+            "module": "src/blink-wc.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "BlinkWc",
+          "declaration": {
+            "name": "BlinkWc",
+            "module": "src/blink-wc.js"
+          }
+        }
+      ]
+    }
+  ]
+}
