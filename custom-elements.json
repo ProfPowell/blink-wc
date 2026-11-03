@@ -106,6 +106,10 @@
             },
             {
               "kind": "method",
+              "name": "_reduceMotion"
+            },
+            {
+              "kind": "method",
               "name": "_isPaused"
             },
             {

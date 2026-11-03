@@ -106,6 +106,39 @@ const MORSE = {
   '@': '.--.-.',
 };
 
+// ── Reduced-motion watcher (shared by every instance) ──────────────────────
+// Motion is reduced when the OS asks for it OR when Vanilla Breeze's theme
+// picker has turned "Motion Effects" off, which sets :root[data-motion-reduced].
+// One media-query listener and one MutationObserver serve all instances, and
+// re-sync the JS-driven modes (morse, steps, decode) when either flips.
+const REDUCED_MQ = matchMedia('(prefers-reduced-motion: reduce)');
+const INSTANCES = new Set();
+let rootObserver = null;
+
+const systemReducesMotion = () =>
+  REDUCED_MQ.matches || document.documentElement.hasAttribute('data-motion-reduced');
+
+const resyncAll = () => INSTANCES.forEach((el) => el._update());
+
+function watchMotion(el) {
+  INSTANCES.add(el);
+  if (rootObserver) return;
+  REDUCED_MQ.addEventListener('change', resyncAll);
+  rootObserver = new MutationObserver(resyncAll);
+  rootObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-motion-reduced'],
+  });
+}
+
+function unwatchMotion(el) {
+  INSTANCES.delete(el);
+  if (INSTANCES.size || !rootObserver) return;
+  REDUCED_MQ.removeEventListener('change', resyncAll);
+  rootObserver.disconnect();
+  rootObserver = null;
+}
+
 class BlinkWc extends HTMLElement {
   static get observedAttributes() {
     return [
@@ -163,7 +196,14 @@ class BlinkWc extends HTMLElement {
 
   // ── Imperative shell ───────────────────────────────────────────────────
   connectedCallback() {
-    if (this._built) return;
+    watchMotion(this);
+    if (this._built) {
+      // Re-attached (e.g. moved in the DOM): disconnectedCallback tore down the
+      // observers and stopped the JS drivers, so bring them back.
+      this._observe();
+      this._update();
+      return;
+    }
     this._build();
     this._observe();
     this._update();
@@ -172,6 +212,7 @@ class BlinkWc extends HTMLElement {
   }
 
   disconnectedCallback() {
+    unwatchMotion(this);
     this._intersectionObserver?.disconnect();
     this._content?.removeEventListener('animationiteration', this._onIteration);
     document.removeEventListener('visibilitychange', this._onVisibility);
@@ -296,6 +337,12 @@ class BlinkWc extends HTMLElement {
     return tokens;
   }
 
+  // Whether motion should be suppressed: OS preference or VB's data-motion-reduced,
+  // unless this instance opts out with reduced-motion="ignore".
+  _reduceMotion() {
+    return this.getAttribute('reduced-motion') !== 'ignore' && systemReducesMotion();
+  }
+
   // Whether playback is currently paused (state, off-screen, tab-hidden, or hover).
   _isPaused() {
     if (this.hasAttribute('pause-on-hover') && this.matches(':hover, :focus-within')) return true;
@@ -325,9 +372,7 @@ class BlinkWc extends HTMLElement {
     this.dataset.morse = this._toMorse(text);
 
     // Respect reduced motion: leave the text fully lit, no blinking.
-    const reduce =
-      this.getAttribute('reduced-motion') !== 'ignore' &&
-      matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = this._reduceMotion();
     if (reduce) {
       this.dataset.lit = 'true';
       return;
@@ -468,9 +513,7 @@ class BlinkWc extends HTMLElement {
     );
     if (units.length === 0) return;
 
-    const reduce =
-      this.getAttribute('reduced-motion') !== 'ignore' &&
-      matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = this._reduceMotion();
     if (reduce) {
       for (const s of units) s.textContent = s.dataset.ch;
       return;
@@ -587,9 +630,7 @@ class BlinkWc extends HTMLElement {
     const targets = this._stepTargets();
     if (targets.length === 0) return;
 
-    const reduce =
-      this.getAttribute('reduced-motion') !== 'ignore' &&
-      matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = this._reduceMotion();
     if (reduce) {
       for (const el of targets) el.dataset.step = '0';
       return;

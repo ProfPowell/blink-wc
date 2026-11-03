@@ -27,670 +27,715 @@
  *   data-tab-visible : true | false (Page Visibility)
  * ──────────────────────────────────────────────────────────────────────── */
 
-blink-wc {
-  display: inline-block;
-  --blink-rate: 1s;
-  --blink-stagger: 0.08s;
-}
+/* Join Vanilla Breeze's cascade contract. The order statement is VB's own
+   (copied verbatim) so it is harmless when VB loads first and still correct when
+   this file loads first. Being layered means VB themes/packs and any unlayered
+   author CSS can restyle <blink-wc> without specificity fights. */
+@layer tokens, reset, native-elements, custom-elements, web-components, utils, bundle-theme, bundle-effects, bundle-components;
 
-/* Unupgraded fallback: render content statically, no animation */
-blink-wc:not(:defined),
-blink-wc:not([data-ready]) {
-  display: inline-block;
-}
-
-blink-wc .blink-content {
-  display: inline-block;
-}
-
-/* ─── Keyframes ──────────────────────────────────────────────────────── */
-
-/* blink — the classic: hard on/off, no easing */
-@keyframes blink-wc-blink {
-  0% {
-    opacity: 1;
+@layer web-components {
+  blink-wc {
+    display: inline-block;
+    --blink-rate: 1s;
+    --blink-stagger: 0.08s;
   }
-  50% {
-    opacity: var(--blink-min-opacity, 0);
+
+  /* Unupgraded fallback: render content statically, no animation */
+  blink-wc:not(:defined),
+  blink-wc:not([data-ready]) {
+    display: inline-block;
   }
-  100% {
-    opacity: 1;
+
+  blink-wc .blink-content {
+    display: inline-block;
   }
-}
 
-/* pulse — a soft breathing fade in and out */
-@keyframes blink-wc-pulse {
-  0%,
-  100% {
-    opacity: 1;
+  /* ─── Keyframes ──────────────────────────────────────────────────────── */
+
+  /* blink — the classic: hard on/off, no easing */
+  @keyframes blink-wc-blink {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: var(--blink-min-opacity, 0);
+    }
+    100% {
+      opacity: 1;
+    }
   }
-  50% {
-    opacity: var(--blink-min-opacity, 0.2);
+
+  /* pulse — a soft breathing fade in and out */
+  @keyframes blink-wc-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: var(--blink-min-opacity, 0.2);
+    }
   }
-}
 
-/* flicker — irregular, mostly-on flutter, like a tired fluorescent tube */
-@keyframes blink-wc-flicker {
-  0%,
-  19%,
-  23%,
-  54%,
-  57%,
-  100% {
-    opacity: 1;
+  /* flicker — irregular, mostly-on flutter, like a tired fluorescent tube */
+  @keyframes blink-wc-flicker {
+    0%,
+    19%,
+    23%,
+    54%,
+    57%,
+    100% {
+      opacity: 1;
+    }
+    20%,
+    22%,
+    55%,
+    56% {
+      opacity: var(--blink-min-opacity, 0.25);
+    }
   }
-  20%,
-  22%,
-  55%,
-  56% {
-    opacity: var(--blink-min-opacity, 0.25);
+
+  /* ─── Core behavior application (whole-text blink) ───────────────────── */
+
+  blink-wc[data-behavior='blink'] .blink-content {
+    animation: blink-wc-blink var(--blink-rate, 1s) step-end var(--blink-count, infinite);
   }
-}
+  blink-wc[data-behavior='pulse'] .blink-content {
+    animation: blink-wc-pulse var(--blink-rate, 1s) ease-in-out var(--blink-count, infinite);
+  }
+  blink-wc[data-behavior='flicker'] .blink-content {
+    animation: blink-wc-flicker var(--blink-rate, 1s) step-end var(--blink-count, infinite);
+  }
 
-/* ─── Core behavior application (whole-text blink) ───────────────────── */
+  /* Per-unit, morse, and step modes drive their own animation/state — silence the
+     whole-text blink on the content. (Placed after the behavior rules so it wins
+     the tie.) */
+  blink-wc[data-split] .blink-content,
+  blink-wc[mode='morse'] .blink-content,
+  blink-wc[data-stepping] .blink-content {
+    animation: none;
+  }
 
-blink-wc[data-behavior='blink'] .blink-content {
-  animation: blink-wc-blink var(--blink-rate, 1s) step-end var(--blink-count, infinite);
-}
-blink-wc[data-behavior='pulse'] .blink-content {
-  animation: blink-wc-pulse var(--blink-rate, 1s) ease-in-out var(--blink-count, infinite);
-}
-blink-wc[data-behavior='flicker'] .blink-content {
-  animation: blink-wc-flicker var(--blink-rate, 1s) step-end var(--blink-count, infinite);
-}
+  /* ─── Pause states ───────────────────────────────────────────────────── */
 
-/* Per-unit, morse, and step modes drive their own animation/state — silence the
-   whole-text blink on the content. (Placed after the behavior rules so it wins
-   the tie.) */
-blink-wc[data-split] .blink-content,
-blink-wc[mode='morse'] .blink-content,
-blink-wc[data-stepping] .blink-content {
-  animation: none;
-}
+  /* !important: the per-behavior `animation` shorthand resets play-state to
+     running, so the pause overrides must beat it regardless of specificity. */
+  blink-wc[data-state='paused'] :is(.blink-content, .blink-char),
+  blink-wc[data-visible='false'] :is(.blink-content, .blink-char),
+  blink-wc[data-tab-visible='false'] :is(.blink-content, .blink-char) {
+    animation-play-state: paused !important;
+  }
+  blink-wc[pause-on-hover]:where(:hover, :focus-within) :is(.blink-content, .blink-char) {
+    animation-play-state: paused !important;
+  }
+  blink-wc[pause-on-hover] {
+    cursor: default;
+  }
 
-/* ─── Pause states ───────────────────────────────────────────────────── */
+  /* ─── Accessibility: prefers-reduced-motion ──────────────────────────── */
 
-/* !important: the per-behavior `animation` shorthand resets play-state to
-   running, so the pause overrides must beat it regardless of specificity. */
-blink-wc[data-state='paused'] :is(.blink-content, .blink-char),
-blink-wc[data-visible='false'] :is(.blink-content, .blink-char),
-blink-wc[data-tab-visible='false'] :is(.blink-content, .blink-char) {
-  animation-play-state: paused !important;
-}
-blink-wc[pause-on-hover]:where(:hover, :focus-within) :is(.blink-content, .blink-char) {
-  animation-play-state: paused !important;
-}
-blink-wc[pause-on-hover] {
-  cursor: default;
-}
+  /* Blinking and flashing content is a genuine accessibility hazard, so by
+     default everything stops and the text is shown fully — opt out with
+     reduced-motion="ignore". */
+  @media (prefers-reduced-motion: reduce) {
+    blink-wc:not([reduced-motion='ignore']) :is(.blink-content, .blink-char) {
+      animation: none !important;
+      opacity: 1 !important;
+    }
+    /* The terminal cursor and typewriter caret are pseudo-elements: hold them on. */
+    blink-wc:not([reduced-motion='ignore']) .blink-content::after {
+      animation: none !important;
+    }
+    /* Step modes rest at step 0; force the resting transform flat as well. */
+    blink-wc:not([reduced-motion='ignore'])[data-stepping] :is(.blink-content, .blink-char) {
+      transform: none !important;
+    }
+    blink-wc:not([reduced-motion='ignore'])[mode='morse'] .blink-content {
+      opacity: 1 !important;
+      text-shadow: 0 0 0.4em currentColor;
+    }
+  }
 
-/* ─── Accessibility: prefers-reduced-motion ──────────────────────────── */
-
-/* Blinking and flashing content is a genuine accessibility hazard, so by
-   default everything stops and the text is shown fully — opt out with
-   reduced-motion="ignore". */
-@media (prefers-reduced-motion: reduce) {
-  blink-wc:not([reduced-motion='ignore']) :is(.blink-content, .blink-char) {
+  /* Vanilla Breeze's theme picker can turn "Motion Effects" off, which sets
+     :root[data-motion-reduced]. Treat that exactly like the OS preference. */
+  :root[data-motion-reduced]
+    blink-wc:not([reduced-motion='ignore'])
+    :is(.blink-content, .blink-char) {
     animation: none !important;
     opacity: 1 !important;
   }
+  /* The terminal cursor and typewriter caret are pseudo-elements: hold them on. */
+  :root[data-motion-reduced] blink-wc:not([reduced-motion='ignore']) .blink-content::after {
+    animation: none !important;
+  }
   /* Step modes rest at step 0; force the resting transform flat as well. */
-  blink-wc:not([reduced-motion='ignore'])[data-stepping] :is(.blink-content, .blink-char) {
+  :root[data-motion-reduced]
+    blink-wc:not([reduced-motion='ignore'])[data-stepping]
+    :is(.blink-content, .blink-char) {
     transform: none !important;
   }
-  blink-wc:not([reduced-motion='ignore'])[mode='morse'] .blink-content {
+  :root[data-motion-reduced] blink-wc:not([reduced-motion='ignore'])[mode='morse'] .blink-content {
     opacity: 1 !important;
     text-shadow: 0 0 0.4em currentColor;
   }
-}
 
-/* ─────────────────────────────────────────────────────────────────────────
- * Surface themes
- * ──────────────────────────────────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────────────────────
+   * Surface themes
+   * ──────────────────────────────────────────────────────────────────────── */
 
-/* ─── neon — a buzzing neon sign that flickers on with a colored glow ──── */
-blink-wc[mode='neon'] {
-  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color: var(--blink-fg, var(--color-accent, var(--color-primary, oklch(72% 0.2 330))));
-}
-blink-wc[mode='neon'] .blink-content {
-  animation: blink-wc-neon var(--blink-rate, 3s) step-end infinite;
-}
-@keyframes blink-wc-neon {
-  0%,
-  18%,
-  22%,
-  25%,
-  53%,
-  57%,
-  100% {
+  /* ─── neon — a buzzing neon sign that flickers on with a colored glow ──── */
+  blink-wc[mode='neon'] {
+    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--blink-fg, var(--color-accent, var(--color-primary, oklch(72% 0.2 330))));
+  }
+  blink-wc[mode='neon'] .blink-content {
+    animation: blink-wc-neon var(--blink-rate, 3s) step-end infinite;
+  }
+  @keyframes blink-wc-neon {
+    0%,
+    18%,
+    22%,
+    25%,
+    53%,
+    57%,
+    100% {
+      opacity: 1;
+      text-shadow:
+        0 0 0.3em currentColor,
+        0 0 0.8em currentColor,
+        0 0 1.5em currentColor;
+    }
+    20%,
+    24%,
+    55% {
+      opacity: 0.4;
+      text-shadow: none;
+    }
+  }
+
+  /* ─── crt — green phosphor terminal glow over faint scanlines ──────────── */
+  blink-wc[mode='crt'] {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    /* A CRT is a dark screen in every theme and mode; the phosphor takes its hue
+       from the theme's --color-success, lifted/dimmed so it always reads. */
+    --_phosphor: var(--color-success, oklch(70% 0.2 145));
+    color-scheme: dark;
+    color: var(--blink-fg, oklch(from var(--_phosphor) max(l, 0.82) c h));
+    background-color: var(--blink-bg, oklch(from var(--_phosphor) 0.17 calc(c * 0.15) h));
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-m, 0.4rem);
+    text-shadow: 0 0 0.3em currentColor;
+    background-image: repeating-linear-gradient(
+      0deg,
+      color-mix(in oklch, currentColor 8%, transparent) 0 1px,
+      transparent 1px 3px
+    );
+  }
+
+  /* ─── terminal — steady text with a blinking block cursor ──────────────── */
+  blink-wc[mode='terminal'] {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    color: var(--blink-fg, var(--color-text, oklch(90% 0.02 150)));
+    background-color: var(
+      --blink-bg,
+      var(--color-surface-sunken, var(--color-surface, oklch(16% 0.01 250)))
+    );
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-m, 0.4rem);
+  }
+  blink-wc[mode='terminal'] .blink-content {
+    animation: none;
+  }
+  blink-wc[mode='terminal'] .blink-content::after {
+    content: '▋';
+    margin-inline-start: 0.1em;
+    color: var(--color-accent, var(--color-success, oklch(80% 0.2 145)));
+    animation: blink-wc-blink var(--blink-rate, 1s) step-end infinite;
+  }
+
+  /* ─── warning — amber hazard panel that blinks for attention ───────────── */
+  blink-wc[mode='warning'] {
+    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    --_bg: var(--blink-bg, var(--color-warning, oklch(82% 0.17 85)));
+    /* Black or white, whichever contrasts with the (possibly themed) panel. */
+    color: var(--blink-fg, oklch(from var(--_bg) clamp(0, (0.62 - l) * 1000, 1) 0 0));
+    background: var(--_bg);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-m, 0.4rem);
+  }
+
+  /* ─── alert — a flashing red error banner ──────────────────────────────── */
+  blink-wc[mode='alert'] {
+    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    --_bg: var(--blink-bg, var(--color-error, oklch(55% 0.22 25)));
+    color: var(--blink-fg, oklch(from var(--_bg) clamp(0, (0.62 - l) * 1000, 1) 0 0));
+    background: var(--_bg);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-m, 0.4rem);
+  }
+
+  /* ─── police — alternating red/blue light bar ──────────────────────────── */
+  blink-wc[mode='police'] {
+    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: white;
+  }
+  blink-wc[mode='police'] .blink-content {
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--radius-m, 0.4rem);
+    animation: blink-wc-police var(--blink-rate, 0.8s) step-end infinite;
+  }
+  @keyframes blink-wc-police {
+    0% {
+      background: oklch(55% 0.25 25);
+      box-shadow: 0 0 1.5em oklch(55% 0.25 25);
+    }
+    50% {
+      background: oklch(55% 0.2 265);
+      box-shadow: 0 0 1.5em oklch(55% 0.2 265);
+    }
+  }
+
+  /* ─── vegas — a glowing gold marquee sign ──────────────────────────────── */
+  blink-wc[mode='vegas'] {
+    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(
+      --blink-fg,
+      light-dark(var(--color-warning-text, oklch(52% 0.13 75)), oklch(92% 0.15 90))
+    );
+  }
+  blink-wc[mode='vegas'] .blink-content {
+    animation: blink-wc-vegas var(--blink-rate, 1.2s) ease-in-out infinite;
+  }
+  @keyframes blink-wc-vegas {
+    0%,
+    100% {
+      text-shadow:
+        0 0 0.3em currentColor,
+        0 0 0.7em currentColor;
+    }
+    50% {
+      opacity: var(--blink-min-opacity, 0.55);
+      text-shadow: none;
+    }
+  }
+
+  /* ─── morse — blink the text out as Morse code, with a dot/dash caption ──── */
+  blink-wc[mode='morse'] {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    color: var(--blink-fg, var(--color-success-text, var(--color-success, oklch(85% 0.2 145))));
+  }
+  blink-wc[mode='morse'] .blink-content {
+    opacity: var(--blink-min-opacity, 0.12);
+    transition: opacity 60ms linear;
+  }
+  blink-wc[mode='morse'][data-lit='true'] .blink-content {
     opacity: 1;
     text-shadow:
-      0 0 0.3em currentColor,
-      0 0 0.8em currentColor,
-      0 0 1.5em currentColor;
+      0 0 0.35em currentColor,
+      0 0 0.8em currentColor;
   }
-  20%,
-  24%,
-  55% {
-    opacity: 0.4;
-    text-shadow: none;
-  }
-}
-
-/* ─── crt — green phosphor terminal glow over faint scanlines ──────────── */
-blink-wc[mode='crt'] {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  color: var(--blink-fg, var(--color-success, oklch(85% 0.2 145)));
-  background-color: var(--blink-bg, var(--color-background, oklch(15% 0.02 150)));
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-m, 0.4rem);
-  text-shadow: 0 0 0.3em currentColor;
-  background-image: repeating-linear-gradient(
-    0deg,
-    color-mix(in oklch, currentColor 8%, transparent) 0 1px,
-    transparent 1px 3px
-  );
-}
-
-/* ─── terminal — steady text with a blinking block cursor ──────────────── */
-blink-wc[mode='terminal'] {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  color: var(--blink-fg, var(--color-text, oklch(90% 0.02 150)));
-  background-color: var(
-    --blink-bg,
-    var(--color-surface-sunken, var(--color-surface, oklch(16% 0.01 250)))
-  );
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-m, 0.4rem);
-}
-blink-wc[mode='terminal'] .blink-content {
-  animation: none;
-}
-blink-wc[mode='terminal'] .blink-content::after {
-  content: '▋';
-  margin-inline-start: 0.1em;
-  color: var(--color-accent, var(--color-success, oklch(80% 0.2 145)));
-  animation: blink-wc-blink var(--blink-rate, 1s) step-end infinite;
-}
-
-/* ─── warning — amber hazard panel that blinks for attention ───────────── */
-blink-wc[mode='warning'] {
-  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--blink-fg, oklch(22% 0.04 80));
-  background: var(--blink-bg, var(--color-warning, oklch(82% 0.17 85)));
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-m, 0.4rem);
-}
-
-/* ─── alert — a flashing red error banner ──────────────────────────────── */
-blink-wc[mode='alert'] {
-  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--blink-fg, white);
-  background: var(--blink-bg, var(--color-error, oklch(55% 0.22 25)));
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-m, 0.4rem);
-}
-
-/* ─── police — alternating red/blue light bar ──────────────────────────── */
-blink-wc[mode='police'] {
-  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: white;
-}
-blink-wc[mode='police'] .blink-content {
-  padding: 0.4rem 0.9rem;
-  border-radius: var(--radius-m, 0.4rem);
-  animation: blink-wc-police var(--blink-rate, 0.8s) step-end infinite;
-}
-@keyframes blink-wc-police {
-  0% {
-    background: oklch(55% 0.25 25);
-    box-shadow: 0 0 1.5em oklch(55% 0.25 25);
-  }
-  50% {
-    background: oklch(55% 0.2 265);
-    box-shadow: 0 0 1.5em oklch(55% 0.2 265);
-  }
-}
-
-/* ─── vegas — a glowing gold marquee sign ──────────────────────────────── */
-blink-wc[mode='vegas'] {
-  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--blink-fg, oklch(92% 0.15 90));
-}
-blink-wc[mode='vegas'] .blink-content {
-  animation: blink-wc-vegas var(--blink-rate, 1.2s) ease-in-out infinite;
-}
-@keyframes blink-wc-vegas {
-  0%,
-  100% {
-    text-shadow:
-      0 0 0.3em currentColor,
-      0 0 0.7em currentColor;
-  }
-  50% {
-    opacity: var(--blink-min-opacity, 0.55);
-    text-shadow: none;
-  }
-}
-
-/* ─── morse — blink the text out as Morse code, with a dot/dash caption ──── */
-blink-wc[mode='morse'] {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  color: var(--blink-fg, var(--color-success, oklch(85% 0.2 145)));
-}
-blink-wc[mode='morse'] .blink-content {
-  opacity: var(--blink-min-opacity, 0.12);
-  transition: opacity 60ms linear;
-}
-blink-wc[mode='morse'][data-lit='true'] .blink-content {
-  opacity: 1;
-  text-shadow:
-    0 0 0.35em currentColor,
-    0 0 0.8em currentColor;
-}
-blink-wc[mode='morse']::after {
-  content: attr(data-morse);
-  display: block;
-  margin-block-start: 0.4rem;
-  font-size: 0.75em;
-  letter-spacing: 0.12em;
-  opacity: 0.55;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
- * Per-unit motion modes
- *
- * For the letter modes the component wraps every character (or word, with
- * unit="word") in <span class="blink-char" style="--i:N">. The --i index
- * staggers each unit so the effect ripples across the text. Whitespace
- * becomes <span class="blink-char blink-space">.
- * ──────────────────────────────────────────────────────────────────────── */
-
-blink-wc[data-split] .blink-char {
-  display: inline-block;
-  white-space: pre;
-}
-
-/* wave — a hard blink that travels across the units, one after another */
-blink-wc[mode='wave'] .blink-char {
-  animation: blink-wc-blink var(--blink-rate, 1.2s) step-end infinite;
-  animation-delay: calc((var(--i, 0) / var(--n, 1)) * var(--blink-rate, 1.2s));
-}
-
-/* twinkle — every unit blinks on its own random clock, like a field of stars */
-blink-wc[mode='twinkle'] .blink-char {
-  animation: blink-wc-blink var(--rate, 1s) step-end infinite;
-  animation-delay: var(--delay, 0s);
-}
-
-/* sparkle — twinkle with a glinting scale + glow */
-blink-wc[mode='sparkle'] .blink-char {
-  animation: blink-wc-sparkle var(--rate, 1.2s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
-}
-@keyframes blink-wc-sparkle {
-  0%,
-  100% {
-    opacity: 0.3;
-    transform: scale(0.85);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.18);
-    text-shadow: 0 0 0.5em currentColor;
-  }
-}
-
-/* rainbow — each unit a hue of the spectrum, blinking as the colors cycle */
-blink-wc[mode='rainbow'] .blink-char {
-  color: hsl(calc(var(--i, 0) * 30deg) 90% 60%);
-  animation:
-    blink-wc-blink var(--blink-rate, 1s) step-end infinite,
-    blink-wc-hue 2.4s linear infinite;
-  animation-delay: calc(var(--i, 0) * -0.06s);
-}
-@keyframes blink-wc-hue {
-  to {
-    filter: hue-rotate(360deg);
-  }
-}
-
-/* chase — a single lit unit sweeps along the row, theater-marquee style */
-blink-wc[mode='chase'] .blink-char {
-  opacity: 0.25;
-  animation: blink-wc-chase 1.4s ease-in-out infinite;
-  animation-delay: calc((var(--i, 0) / var(--n, 1)) * 1.4s);
-}
-@keyframes blink-wc-chase {
-  0%,
-  100% {
-    opacity: 0.25;
-  }
-  25% {
-    opacity: 1;
-    color: var(--color-accent, var(--color-primary, currentColor));
-    text-shadow: 0 0 0.55em currentColor;
-  }
-}
-
-/* glitch — units blink while jittering with a chromatic-aberration shadow */
-blink-wc[mode='glitch'] .blink-char {
-  text-shadow:
-    0.03em 0 oklch(60% 0.24 25 / 0.7),
-    -0.03em 0 oklch(70% 0.18 220 / 0.7);
-  animation: blink-wc-glitch 0.45s steps(2, jump-none) infinite;
-  animation-delay: calc(var(--i, 0) * -0.05s);
-}
-@keyframes blink-wc-glitch {
-  0%,
-  100% {
-    transform: translate(0, 0);
-    opacity: 1;
-  }
-  30% {
-    transform: translate(0.04em, -0.04em);
+  blink-wc[mode='morse']::after {
+    content: attr(data-morse);
+    display: block;
+    margin-block-start: 0.4rem;
+    font-size: 0.75em;
+    letter-spacing: 0.12em;
     opacity: 0.55;
   }
-  60% {
-    transform: translate(-0.04em, 0.03em);
-    opacity: 1;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * Per-unit motion modes
+   *
+   * For the letter modes the component wraps every character (or word, with
+   * unit="word") in <span class="blink-char" style="--i:N">. The --i index
+   * staggers each unit so the effect ripples across the text. Whitespace
+   * becomes <span class="blink-char blink-space">.
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  blink-wc[data-split] .blink-char {
+    display: inline-block;
+    white-space: pre;
   }
-}
 
-/* cascade — a soft fade pulse rippling unit-to-unit */
-blink-wc[mode='cascade'] .blink-char {
-  animation: blink-wc-pulse var(--blink-rate, 1.4s) ease-in-out infinite;
-  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.08s));
-}
-
-/* typewriter — units appear one by one, with a blinking caret at the end */
-blink-wc[mode='typewriter'] .blink-char {
-  opacity: 0;
-  animation: blink-wc-type 0.01s step-end forwards;
-  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.12s));
-}
-@keyframes blink-wc-type {
-  to {
-    opacity: 1;
+  /* wave — a hard blink that travels across the units, one after another */
+  blink-wc[mode='wave'] .blink-char {
+    animation: blink-wc-blink var(--blink-rate, 1.2s) step-end infinite;
+    animation-delay: calc((var(--i, 0) / var(--n, 1)) * var(--blink-rate, 1.2s));
   }
-}
-blink-wc[mode='typewriter'] .blink-content::after {
-  content: '▋';
-  margin-inline-start: 0.05em;
-  color: var(--color-accent, currentColor);
-  animation: blink-wc-blink var(--blink-rate, 1s) step-end infinite;
-}
 
-/* ─────────────────────────────────────────────────────────────────────────
- * Multi-step engine
- *
- * The JS advances data-step="0..N-1" across one cycle, holding each step for an
- * equal slice. Each step is just a CSS state, so a step can change colour,
- * transform, outline, glow — anything. A plain on/off blink is the 2-step case.
- *
- * --blink-step-ease  controls the transition duration *between* steps: 0s
- *   (default) is a hard cut (true blink); a non-zero value morphs smoothly.
- * --blink-step-timing is the transition timing-function (default `ease`).
- *
- * Both are read from the *incoming* step's computed style, so a step can carry
- * its own duration and easing. The hold time of each step is set by
- * `step-durations`. With step-by="letter"/"word" each unit carries its own
- * data-step (offset by --blink-stagger) so the states ripple across the text.
- * Authors target steps with `blink-wc :is(.blink-content,.blink-char)[data-step='K']`.
- * ──────────────────────────────────────────────────────────────────────── */
-
-blink-wc :is(.blink-content, .blink-char)[data-step] {
-  display: inline-block;
-  transition:
-    opacity var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
-    color var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
-    transform var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
-    text-shadow var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
-    letter-spacing var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
-    -webkit-text-stroke-color var(--blink-step-ease, 0s) var(--blink-step-timing, ease);
-}
-
-/* Default two-state: behavior="steps" with no preset is a plain blink. */
-blink-wc[behavior='steps'] :is(.blink-content, .blink-char)[data-step='1'] {
-  opacity: var(--blink-min-opacity, 0);
-}
-
-/* ─── extrude — an isometric 3D block that punches toward you on-beat ───── */
-blink-wc[mode='extrude'] {
-  --blink-step-ease: 0.18s;
-  --_ext: var(--blink-shadow, var(--color-primary, oklch(45% 0.06 250)));
-  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
-  font-weight: 900;
-  letter-spacing: 0.01em;
-  color: var(--blink-fg, var(--color-accent, oklch(72% 0.18 255)));
-  perspective: 600px;
-}
-blink-wc[mode='extrude'] :is(.blink-content, .blink-char) {
-  transform-origin: center;
-}
-blink-wc[mode='extrude'] :is(.blink-content, .blink-char)[data-step='1'] {
-  transform: scale(1.14) translateY(-0.04em);
-  text-shadow:
-    0.025em 0.025em var(--_ext),
-    0.05em 0.05em var(--_ext),
-    0.075em 0.075em var(--_ext),
-    0.1em 0.1em var(--_ext),
-    0.125em 0.125em var(--_ext),
-    0.15em 0.15em color-mix(in oklch, var(--_ext), black 35%);
-}
-
-/* ─── collapse — the text squashes flat, then pops back up ─────────────── */
-blink-wc[mode='collapse'] {
-  --blink-step-ease: 0.12s;
-  font-weight: 800;
-}
-blink-wc[mode='collapse'] :is(.blink-content, .blink-char) {
-  transform-origin: center bottom;
-}
-blink-wc[mode='collapse'] :is(.blink-content, .blink-char)[data-step='1'] {
-  transform: scaleY(0.06) scaleX(1.12);
-  opacity: 0.6;
-}
-
-/* ─── outline — alternates between a solid fill and a hollow outline ───── */
-blink-wc[mode='outline'] {
-  --blink-step-ease: 0.12s;
-  --_stroke: var(--blink-fg, var(--color-accent, oklch(60% 0.2 285)));
-  font-weight: 900;
-  color: var(--_stroke);
-}
-blink-wc[mode='outline'] :is(.blink-content, .blink-char)[data-step='1'] {
-  color: transparent;
-  -webkit-text-stroke: 0.035em var(--_stroke);
-}
-
-/* ─── morph — a 4-step showcase: each step its own colour + transform ──── */
-blink-wc[mode='morph'] {
-  --blink-step-ease: 0.16s;
-  font-weight: 900;
-}
-blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='0'] {
-  color: var(--color-accent, oklch(65% 0.2 20));
-  transform: scale(1);
-}
-blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='1'] {
-  color: var(--color-success, oklch(70% 0.18 145));
-  transform: scale(1.1) rotate(-2deg);
-}
-blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='2'] {
-  color: var(--color-warning, oklch(78% 0.16 85));
-  transform: scale(0.92) rotate(2deg);
-  letter-spacing: 0.06em;
-}
-blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='3'] {
-  color: var(--color-primary, oklch(60% 0.2 285));
-  transform: scale(1.06);
-  text-shadow: 0 0 0.5em currentColor;
-}
-
-/* ─── depth — a true-3D punch toward the viewer (perspective + translateZ) ─ */
-blink-wc[mode='depth'] {
-  --blink-step-ease: 0.2s;
-  perspective: 700px;
-  font-weight: 900;
-  color: var(--blink-fg, var(--color-accent, oklch(72% 0.18 255)));
-}
-blink-wc[mode='depth'] :is(.blink-content, .blink-char) {
-  transform-style: preserve-3d;
-}
-blink-wc[mode='depth'] :is(.blink-content, .blink-char)[data-step='1'] {
-  transform: translateZ(140px);
-  text-shadow: 0 0.3em 0.8em oklch(0% 0 0 / 0.4);
-}
-
-/* ─── revolve — a 4-step turn on the Y axis that flips to the back and around */
-blink-wc[mode='revolve'] {
-  --blink-step-ease: 0.25s;
-  perspective: 800px;
-  font-weight: 900;
-}
-blink-wc[mode='revolve'] :is(.blink-content, .blink-char) {
-  transform-style: preserve-3d;
-  backface-visibility: visible;
-}
-blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='0'] {
-  transform: rotateY(0deg);
-}
-blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='1'] {
-  transform: rotateY(90deg);
-  opacity: 0.5;
-}
-blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='2'] {
-  transform: rotateY(180deg);
-}
-blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='3'] {
-  transform: rotateY(270deg);
-  opacity: 0.5;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
- * More per-unit motion modes
- * ──────────────────────────────────────────────────────────────────────── */
-
-/* zoom — each letter swells toward you and fades, in a staggered ripple */
-blink-wc[mode='zoom'] .blink-char {
-  animation: blink-wc-zoom var(--blink-rate, 1s) ease-in-out infinite;
-  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.08s));
-}
-@keyframes blink-wc-zoom {
-  0%,
-  100% {
-    transform: scale(0.6);
-    opacity: var(--blink-min-opacity, 0.4);
+  /* twinkle — every unit blinks on its own random clock, like a field of stars */
+  blink-wc[mode='twinkle'] .blink-char {
+    animation: blink-wc-blink var(--rate, 1s) step-end infinite;
+    animation-delay: var(--delay, 0s);
   }
-  50% {
-    transform: scale(1.3);
-    opacity: 1;
-  }
-}
 
-/* flip3d — split-flap board: each letter tumbles a full turn on the X axis */
-blink-wc[mode='flip3d'] {
-  perspective: 600px;
-}
-blink-wc[mode='flip3d'] .blink-char {
-  animation: blink-wc-flip3d var(--blink-rate, 1.4s) ease-in-out infinite;
-  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.1s));
-}
-@keyframes blink-wc-flip3d {
-  0%,
-  100% {
-    transform: rotateX(0deg);
+  /* sparkle — twinkle with a glinting scale + glow */
+  blink-wc[mode='sparkle'] .blink-char {
+    animation: blink-wc-sparkle var(--rate, 1.2s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
   }
-  50% {
-    transform: rotateX(1turn);
-    opacity: 0.4;
+  @keyframes blink-wc-sparkle {
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: scale(0.85);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.18);
+      text-shadow: 0 0 0.5em currentColor;
+    }
   }
-}
 
-/* swing — letters dangle and swing like pendulums from their top edge */
-blink-wc[mode='swing'] .blink-char {
-  transform-origin: top center;
-  animation: blink-wc-swing var(--blink-rate, 1.6s) ease-in-out infinite;
-  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.08s));
-}
-@keyframes blink-wc-swing {
-  0%,
-  100% {
-    transform: rotate(-12deg);
+  /* rainbow — each unit a hue of the spectrum, blinking as the colors cycle */
+  blink-wc[mode='rainbow'] .blink-char {
+    color: hsl(calc(var(--i, 0) * 30deg) 90% 60%);
+    animation:
+      blink-wc-blink var(--blink-rate, 1s) step-end infinite,
+      blink-wc-hue 2.4s linear infinite;
+    animation-delay: calc(var(--i, 0) * -0.06s);
   }
-  50% {
-    transform: rotate(12deg);
+  @keyframes blink-wc-hue {
+    to {
+      filter: hue-rotate(360deg);
+    }
   }
-}
 
-/* shake — nervous jitter with a blink, each letter slightly out of phase */
-blink-wc[mode='shake'] .blink-char {
-  animation: blink-wc-shake 0.4s steps(4, jump-none) infinite;
-  animation-delay: calc(var(--i, 0) * -0.05s);
-}
-@keyframes blink-wc-shake {
-  0%,
-  100% {
-    transform: translate(0, 0);
+  /* chase — a single lit unit sweeps along the row, theater-marquee style */
+  blink-wc[mode='chase'] .blink-char {
+    opacity: 0.25;
+    animation: blink-wc-chase 1.4s ease-in-out infinite;
+    animation-delay: calc((var(--i, 0) / var(--n, 1)) * 1.4s);
   }
-  20% {
-    transform: translate(-0.05em, 0.04em);
-    opacity: 0.7;
+  @keyframes blink-wc-chase {
+    0%,
+    100% {
+      opacity: 0.25;
+    }
+    25% {
+      opacity: 1;
+      color: var(--color-accent, var(--color-primary, currentColor));
+      text-shadow: 0 0 0.55em currentColor;
+    }
   }
-  40% {
-    transform: translate(0.05em, -0.03em);
-  }
-  60% {
-    transform: translate(-0.04em, -0.04em);
-    opacity: 0.7;
-  }
-  80% {
-    transform: translate(0.04em, 0.03em);
-  }
-}
 
-/* heartbeat — a double-thump scale pulse rippling across the letters */
-blink-wc[mode='heartbeat'] .blink-char {
-  animation: blink-wc-heartbeat var(--blink-rate, 1.2s) ease-in-out infinite;
-  animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.05s));
-}
-@keyframes blink-wc-heartbeat {
-  0%,
-  40%,
-  100% {
+  /* glitch — units blink while jittering with a chromatic-aberration shadow */
+  blink-wc[mode='glitch'] .blink-char {
+    text-shadow:
+      0.03em 0 oklch(60% 0.24 25 / 0.7),
+      -0.03em 0 oklch(70% 0.18 220 / 0.7);
+    animation: blink-wc-glitch 0.45s steps(2, jump-none) infinite;
+    animation-delay: calc(var(--i, 0) * -0.05s);
+  }
+  @keyframes blink-wc-glitch {
+    0%,
+    100% {
+      transform: translate(0, 0);
+      opacity: 1;
+    }
+    30% {
+      transform: translate(0.04em, -0.04em);
+      opacity: 0.55;
+    }
+    60% {
+      transform: translate(-0.04em, 0.03em);
+      opacity: 1;
+    }
+  }
+
+  /* cascade — a soft fade pulse rippling unit-to-unit */
+  blink-wc[mode='cascade'] .blink-char {
+    animation: blink-wc-pulse var(--blink-rate, 1.4s) ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.08s));
+  }
+
+  /* typewriter — units appear one by one, with a blinking caret at the end */
+  blink-wc[mode='typewriter'] .blink-char {
+    opacity: 0;
+    animation: blink-wc-type 0.01s step-end forwards;
+    animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.12s));
+  }
+  @keyframes blink-wc-type {
+    to {
+      opacity: 1;
+    }
+  }
+  blink-wc[mode='typewriter'] .blink-content::after {
+    content: '▋';
+    margin-inline-start: 0.05em;
+    color: var(--color-accent, currentColor);
+    animation: blink-wc-blink var(--blink-rate, 1s) step-end infinite;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * Multi-step engine
+   *
+   * The JS advances data-step="0..N-1" across one cycle, holding each step for an
+   * equal slice. Each step is just a CSS state, so a step can change colour,
+   * transform, outline, glow — anything. A plain on/off blink is the 2-step case.
+   *
+   * --blink-step-ease  controls the transition duration *between* steps: 0s
+   *   (default) is a hard cut (true blink); a non-zero value morphs smoothly.
+   * --blink-step-timing is the transition timing-function (default `ease`).
+   *
+   * Both are read from the *incoming* step's computed style, so a step can carry
+   * its own duration and easing. The hold time of each step is set by
+   * `step-durations`. With step-by="letter"/"word" each unit carries its own
+   * data-step (offset by --blink-stagger) so the states ripple across the text.
+   * Authors target steps with `blink-wc :is(.blink-content,.blink-char)[data-step='K']`.
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  blink-wc :is(.blink-content, .blink-char)[data-step] {
+    display: inline-block;
+    transition:
+      opacity var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
+      color var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
+      transform var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
+      text-shadow var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
+      letter-spacing var(--blink-step-ease, 0s) var(--blink-step-timing, ease),
+      -webkit-text-stroke-color var(--blink-step-ease, 0s) var(--blink-step-timing, ease);
+  }
+
+  /* Default two-state: behavior="steps" with no preset is a plain blink. */
+  blink-wc[behavior='steps'] :is(.blink-content, .blink-char)[data-step='1'] {
+    opacity: var(--blink-min-opacity, 0);
+  }
+
+  /* ─── extrude — an isometric 3D block that punches toward you on-beat ───── */
+  blink-wc[mode='extrude'] {
+    --blink-step-ease: 0.18s;
+    --_ext: var(--blink-shadow, var(--color-primary, oklch(45% 0.06 250)));
+    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    color: var(--blink-fg, var(--color-accent, oklch(72% 0.18 255)));
+    perspective: 600px;
+  }
+  blink-wc[mode='extrude'] :is(.blink-content, .blink-char) {
+    transform-origin: center;
+  }
+  blink-wc[mode='extrude'] :is(.blink-content, .blink-char)[data-step='1'] {
+    transform: scale(1.14) translateY(-0.04em);
+    text-shadow:
+      0.025em 0.025em var(--_ext),
+      0.05em 0.05em var(--_ext),
+      0.075em 0.075em var(--_ext),
+      0.1em 0.1em var(--_ext),
+      0.125em 0.125em var(--_ext),
+      0.15em 0.15em color-mix(in oklch, var(--_ext), black 35%);
+  }
+
+  /* ─── collapse — the text squashes flat, then pops back up ─────────────── */
+  blink-wc[mode='collapse'] {
+    --blink-step-ease: 0.12s;
+    font-weight: 800;
+  }
+  blink-wc[mode='collapse'] :is(.blink-content, .blink-char) {
+    transform-origin: center bottom;
+  }
+  blink-wc[mode='collapse'] :is(.blink-content, .blink-char)[data-step='1'] {
+    transform: scaleY(0.06) scaleX(1.12);
+    opacity: 0.6;
+  }
+
+  /* ─── outline — alternates between a solid fill and a hollow outline ───── */
+  blink-wc[mode='outline'] {
+    --blink-step-ease: 0.12s;
+    --_stroke: var(--blink-fg, var(--color-accent, oklch(60% 0.2 285)));
+    font-weight: 900;
+    color: var(--_stroke);
+  }
+  blink-wc[mode='outline'] :is(.blink-content, .blink-char)[data-step='1'] {
+    color: transparent;
+    -webkit-text-stroke: 0.035em var(--_stroke);
+  }
+
+  /* ─── morph — a 4-step showcase: each step its own colour + transform ──── */
+  blink-wc[mode='morph'] {
+    --blink-step-ease: 0.16s;
+    font-weight: 900;
+  }
+  blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='0'] {
+    color: var(--color-accent, oklch(65% 0.2 20));
     transform: scale(1);
   }
-  10% {
-    transform: scale(1.3);
+  blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='1'] {
+    color: var(--color-success, oklch(70% 0.18 145));
+    transform: scale(1.1) rotate(-2deg);
   }
-  20% {
-    transform: scale(1);
+  blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='2'] {
+    color: var(--color-warning, oklch(78% 0.16 85));
+    transform: scale(0.92) rotate(2deg);
+    letter-spacing: 0.06em;
   }
-  30% {
-    transform: scale(1.2);
+  blink-wc[mode='morph'] :is(.blink-content, .blink-char)[data-step='3'] {
+    color: var(--color-primary, oklch(60% 0.2 285));
+    transform: scale(1.06);
+    text-shadow: 0 0 0.5em currentColor;
   }
-}
 
-/* decode — glyphs scramble (set in JS) then lock onto the real text. Monospace
-   keeps the width stable while glyphs change. Matrix-green glow by default. */
-blink-wc[mode='decode'] {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  color: var(--blink-fg, var(--color-success, oklch(85% 0.2 145)));
-  text-shadow: 0 0 0.25em currentColor;
+  /* ─── depth — a true-3D punch toward the viewer (perspective + translateZ) ─ */
+  blink-wc[mode='depth'] {
+    --blink-step-ease: 0.2s;
+    perspective: 700px;
+    font-weight: 900;
+    color: var(--blink-fg, var(--color-accent, oklch(72% 0.18 255)));
+  }
+  blink-wc[mode='depth'] :is(.blink-content, .blink-char) {
+    transform-style: preserve-3d;
+  }
+  blink-wc[mode='depth'] :is(.blink-content, .blink-char)[data-step='1'] {
+    transform: translateZ(140px);
+    text-shadow: 0 0.3em 0.8em oklch(0% 0 0 / 0.4);
+  }
+
+  /* ─── revolve — a 4-step turn on the Y axis that flips to the back and around */
+  blink-wc[mode='revolve'] {
+    --blink-step-ease: 0.25s;
+    perspective: 800px;
+    font-weight: 900;
+  }
+  blink-wc[mode='revolve'] :is(.blink-content, .blink-char) {
+    transform-style: preserve-3d;
+    backface-visibility: visible;
+  }
+  blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='0'] {
+    transform: rotateY(0deg);
+  }
+  blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='1'] {
+    transform: rotateY(90deg);
+    opacity: 0.5;
+  }
+  blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='2'] {
+    transform: rotateY(180deg);
+  }
+  blink-wc[mode='revolve'] :is(.blink-content, .blink-char)[data-step='3'] {
+    transform: rotateY(270deg);
+    opacity: 0.5;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * More per-unit motion modes
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  /* zoom — each letter swells toward you and fades, in a staggered ripple */
+  blink-wc[mode='zoom'] .blink-char {
+    animation: blink-wc-zoom var(--blink-rate, 1s) ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.08s));
+  }
+  @keyframes blink-wc-zoom {
+    0%,
+    100% {
+      transform: scale(0.6);
+      opacity: var(--blink-min-opacity, 0.4);
+    }
+    50% {
+      transform: scale(1.3);
+      opacity: 1;
+    }
+  }
+
+  /* flip3d — split-flap board: each letter tumbles a full turn on the X axis */
+  blink-wc[mode='flip3d'] {
+    perspective: 600px;
+  }
+  blink-wc[mode='flip3d'] .blink-char {
+    animation: blink-wc-flip3d var(--blink-rate, 1.4s) ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.1s));
+  }
+  @keyframes blink-wc-flip3d {
+    0%,
+    100% {
+      transform: rotateX(0deg);
+    }
+    50% {
+      transform: rotateX(1turn);
+      opacity: 0.4;
+    }
+  }
+
+  /* swing — letters dangle and swing like pendulums from their top edge */
+  blink-wc[mode='swing'] .blink-char {
+    transform-origin: top center;
+    animation: blink-wc-swing var(--blink-rate, 1.6s) ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.08s));
+  }
+  @keyframes blink-wc-swing {
+    0%,
+    100% {
+      transform: rotate(-12deg);
+    }
+    50% {
+      transform: rotate(12deg);
+    }
+  }
+
+  /* shake — nervous jitter with a blink, each letter slightly out of phase */
+  blink-wc[mode='shake'] .blink-char {
+    animation: blink-wc-shake 0.4s steps(4, jump-none) infinite;
+    animation-delay: calc(var(--i, 0) * -0.05s);
+  }
+  @keyframes blink-wc-shake {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    20% {
+      transform: translate(-0.05em, 0.04em);
+      opacity: 0.7;
+    }
+    40% {
+      transform: translate(0.05em, -0.03em);
+    }
+    60% {
+      transform: translate(-0.04em, -0.04em);
+      opacity: 0.7;
+    }
+    80% {
+      transform: translate(0.04em, 0.03em);
+    }
+  }
+
+  /* heartbeat — a double-thump scale pulse rippling across the letters */
+  blink-wc[mode='heartbeat'] .blink-char {
+    animation: blink-wc-heartbeat var(--blink-rate, 1.2s) ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * var(--blink-stagger, 0.05s));
+  }
+  @keyframes blink-wc-heartbeat {
+    0%,
+    40%,
+    100% {
+      transform: scale(1);
+    }
+    10% {
+      transform: scale(1.3);
+    }
+    20% {
+      transform: scale(1);
+    }
+    30% {
+      transform: scale(1.2);
+    }
+  }
+
+  /* decode — glyphs scramble (set in JS) then lock onto the real text. Monospace
+     keeps the width stable while glyphs change. Matrix-green glow by default. */
+  blink-wc[mode='decode'] {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    color: var(--blink-fg, var(--color-success-text, var(--color-success, oklch(85% 0.2 145))));
+    text-shadow: 0 0 0.25em currentColor;
+  }
 }
