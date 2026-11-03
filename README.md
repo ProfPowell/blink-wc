@@ -266,10 +266,29 @@ automatically:
 No configuration is required, and pages without Vanilla Breeze render via the
 built-in fallbacks.
 
+How it fits the VB system:
+
+- **Light/dark aware.** Tokens are resolved per element, so `data-mode="light"` /
+  `"dark"` and VB's `light-dark()` tokens re-skin every mode. Text on coloured
+  panels (`warning`, `alert`) is computed black-or-white from the panel colour,
+  so it stays readable on any theme (including `a11y-high-contrast`) and with a
+  custom `--blink-bg`. `crt` is always a dark screen whose phosphor takes the
+  theme's `--color-success` hue.
+- **Cascade layers.** All styles live in `@layer web-components`, using VB's own
+  layer order. VB themes and packs (`bundle-theme` and above) and any unlayered
+  author CSS override `<blink-wc>` without specificity fights.
+- **Motion Effects toggle.** Turning off "Motion Effects" in VB's
+  `<theme-picker>` (which sets `:root[data-motion-reduced]`) stops `<blink-wc>`
+  exactly like `prefers-reduced-motion`, live, without a reload.
+
+Relies on CSS relative colour syntax and `light-dark()` (Baseline 2024).
+
 ## Accessibility
 
-- `prefers-reduced-motion: reduce` halts all animation and shows the text fully,
-  unless you explicitly set `reduced-motion="ignore"`.
+- `prefers-reduced-motion: reduce` — or Vanilla Breeze's
+  `:root[data-motion-reduced]` — halts all animation (including the terminal and
+  typewriter carets) and shows the text fully, unless you explicitly set
+  `reduced-motion="ignore"`. Changes apply live.
 - The blink pauses when off-screen and when the tab is hidden.
 - `pause-on-hover` also pauses on keyboard focus (`:focus-within`).
 - Avoid fast, large-area blinking, which can trigger photosensitive seizures

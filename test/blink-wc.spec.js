@@ -181,8 +181,25 @@ test.describe('Step engine', () => {
     await page.locator('#morph').scrollIntoViewIfNeeded();
     const steps = await page.evaluate(() => document.getElementById('morph').steps);
     expect(steps).toBe(4);
-    // It eventually reaches the highest step index (3).
-    await expect.poll(() => contentStep(page, 'morph'), { timeout: 5000 }).toBe('3');
+    // It eventually reaches the highest step index (3). Sample faster than the
+    // 100ms-per-step hold so a coarse poll interval can't skip past it.
+    const reached = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const c = document.querySelector('#morph .blink-content');
+          const id = setInterval(() => {
+            if (c.dataset.step === '3') {
+              clearInterval(id);
+              resolve(true);
+            }
+          }, 10);
+          setTimeout(() => {
+            clearInterval(id);
+            resolve(false);
+          }, 5000);
+        })
+    );
+    expect(reached).toBe(true);
   });
 
   test('step-durations is exposed and the sequence cycles through every step', async ({ page }) => {
@@ -323,5 +340,107 @@ test.describe('Accessibility', () => {
     expect(info.animationName).toBe('none');
     expect(info.opacity).toBe('1');
     await context.close();
+  });
+});
+
+test.describe('Vanilla Breeze integration', () => {
+  const anim = (page, sel) =>
+    page.evaluate((s) => getComputedStyle(document.querySelector(s)).animationName, sel);
+
+  test(':root[data-motion-reduced] stops CSS animation like the OS preference', async ({
+    page,
+  }) => {
+    expect(await anim(page, '#default .blink-content')).toBe('blink-wc-blink');
+    await page.evaluate(() => document.documentElement.setAttribute('data-motion-reduced', ''));
+    expect(await anim(page, '#default .blink-content')).toBe('none');
+    // The terminal cursor is a pseudo-element; it must hold still too.
+    const cursor = await page.evaluate(
+      () =>
+        getComputedStyle(document.querySelector('#terminal .blink-content'), '::after')
+          .animationName
+    );
+    expect(cursor).toBe('none');
+    await page.evaluate(() => document.documentElement.removeAttribute('data-motion-reduced'));
+    expect(await anim(page, '#default .blink-content')).toBe('blink-wc-blink');
+  });
+
+  test('JS-driven modes react live to the VB motion toggle', async ({ page }) => {
+    await page.evaluate(() => document.documentElement.setAttribute('data-motion-reduced', ''));
+    // Morse holds fully lit; steps rest at 0; decode shows the real text.
+    const state = await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => {
+            const m = document.getElementById('morse');
+            const steps = new Set();
+            const c = document.querySelector('#extrude .blink-content');
+            const id = setInterval(() => steps.add(c.dataset.step), 20);
+            setTimeout(() => {
+              clearInterval(id);
+              resolve({
+                lit: m.dataset.lit,
+                steps: [...steps],
+                decode: document.querySelector('#decode .blink-content').textContent,
+              });
+            }, 600);
+          }, 50)
+        )
+    );
+    expect(state.lit).toBe('true');
+    expect(state.steps).toEqual(['0']);
+    expect(state.decode).toBe('DECODE ME');
+    // Turning motion back on restarts the morse driver.
+    await page.evaluate(() => document.documentElement.removeAttribute('data-motion-reduced'));
+    await expect
+      .poll(() => page.evaluate(() => document.getElementById('morse').dataset.lit), {
+        timeout: 5000,
+      })
+      .toBe('false');
+  });
+
+  test('reduced-motion="ignore" still opts out of the VB toggle', async ({ page }) => {
+    await page.evaluate(() => {
+      document.getElementById('default').setAttribute('reduced-motion', 'ignore');
+      document.documentElement.setAttribute('data-motion-reduced', '');
+    });
+    expect(await anim(page, '#default .blink-content')).toBe('blink-wc-blink');
+  });
+
+  test('warning text colour is derived from its (themed) background', async ({ page }) => {
+    const colors = await page.evaluate(() =>
+      ['warn-dark', 'warn-light'].map((id) => getComputedStyle(document.getElementById(id)).color)
+    );
+    expect(colors[0]).toBe('oklch(1 0 0)'); // white on a dark panel
+    expect(colors[1]).toBe('oklch(0 0 0)'); // black on a light panel
+  });
+
+  test('styles live in @layer web-components, so plain author CSS wins', async ({ page }) => {
+    const color = await page.evaluate(() => {
+      const style = document.createElement('style');
+      style.textContent = 'blink-wc { color: rgb(1, 2, 3); }'; // lower specificity than [mode]
+      document.head.append(style);
+      return getComputedStyle(document.getElementById('neon')).color;
+    });
+    expect(color).toBe('rgb(1, 2, 3)');
+  });
+
+  test('re-attaching an element restarts its JS driver', async ({ page }) => {
+    const lit = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const m = document.getElementById('morse');
+          // Move it in place: fires disconnected + connected without leaving view.
+          const { parentNode, nextSibling } = m;
+          m.remove();
+          parentNode.insertBefore(m, nextSibling);
+          const seen = new Set();
+          const id = setInterval(() => seen.add(m.dataset.lit), 20);
+          setTimeout(() => {
+            clearInterval(id);
+            resolve([...seen].sort());
+          }, 2000);
+        })
+    );
+    expect(lit).toEqual(['false', 'true']);
   });
 });

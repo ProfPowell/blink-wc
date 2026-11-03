@@ -17,6 +17,7 @@ export default [
         matchMedia: 'readonly',
         getComputedStyle: 'readonly',
         IntersectionObserver: 'readonly',
+        MutationObserver: 'readonly',
         NodeFilter: 'readonly',
       },
     },

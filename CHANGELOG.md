@@ -4,6 +4,38 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] — 2026-11-03
+
+Brings `<blink-wc>` in line with current Vanilla Breeze (0.5.x) theming.
+
+### Added
+
+- **Honors VB's Motion Effects toggle.** `:root[data-motion-reduced]` (set by
+  `<theme-picker>`) now stops every animation and JS driver exactly like
+  `prefers-reduced-motion`. Both are watched live: flipping either re-syncs
+  morse, step and decode modes without a reload.
+- **Cascade layers.** Styles now live in `@layer web-components`, declared with
+  VB's canonical layer order, so VB themes/packs and unlayered author CSS can
+  restyle the component without specificity fights.
+
+### Fixed
+
+- **Unreadable text on themed panels.** `warning` used a fixed dark text colour,
+  which disappeared on dark warning colours (e.g. `a11y-high-contrast`); `alert`
+  used fixed white. Both now derive black-or-white from the actual panel colour,
+  including a custom `--blink-bg`.
+- **`vegas` was invisible in light mode** (pale gold on white). It now uses the
+  theme's `--color-warning-text` in light mode and bright gold in dark.
+- **`crt` lost its look in light mode** (green on white). It is now always a
+  dark phosphor screen tinted with the theme's `--color-success` hue.
+- **`morse` / `decode` low contrast** — they now use `--color-success-text`
+  (light/dark aware) instead of the fill colour `--color-success`.
+- **Terminal cursor and typewriter caret kept blinking under reduced motion**
+  (they are `::after` pseudo-elements the rule did not cover).
+- **Moving an element in the DOM stopped it.** Re-connecting now re-attaches the
+  visibility observers and restarts the morse/step/decode drivers.
+- Flaky `morph` step test (poll interval could skip the 100 ms step).
+
 ## [1.4.1] — 2026-05-27
 
 ### Fixed
