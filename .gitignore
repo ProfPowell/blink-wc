@@ -4,3 +4,7 @@ playwright-report/
 .idea/
 *.log
 .DS_Store
+
+# Locally installed agent skills
+.agents/
+.claude/skills/

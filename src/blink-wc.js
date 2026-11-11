@@ -139,23 +139,61 @@ function unwatchMotion(el) {
   rootObserver = null;
 }
 
-class BlinkWc extends HTMLElement {
-  static get observedAttributes() {
-    return [
-      'rate',
-      'behavior',
-      'min-opacity',
-      'count',
-      'steps',
-      'step-durations',
-      'step-by',
-      'play-state',
-      'pause-on-hover',
-      'reduced-motion',
-      'mode',
-      'unit',
-    ];
+// ── Text segmentation ──────────────────────────────────────────────────────
+// Split by user-perceived characters (grapheme clusters), not code points, so
+// emoji sequences (👩‍💻, flags) and combining accents stay whole. Word mode uses
+// the locale's word boundaries, which also handles languages without spaces.
+const SEGMENTERS = new Map();
+function segmenter(locale, granularity) {
+  const key = `${locale || ''}|${granularity}`;
+  if (!SEGMENTERS.has(key)) SEGMENTERS.set(key, new Intl.Segmenter(locale, { granularity }));
+  return SEGMENTERS.get(key);
+}
+
+const isWhitespace = (s) => s.trim() === '';
+
+// Graphemes, one per unit; whitespace stays one unit per character.
+function splitGraphemes(text, locale) {
+  return [...segmenter(locale, 'grapheme').segment(text)].map((s) => s.segment);
+}
+
+// Words plus whitespace runs. Trailing punctuation sticks to the word before
+// it, so "hello, world" splits as "hello," " " "world".
+function splitWords(text, locale) {
+  const tokens = [];
+  for (const { segment, isWordLike } of segmenter(locale, 'word').segment(text)) {
+    const ws = isWhitespace(segment);
+    const prev = tokens.length ? tokens[tokens.length - 1] : null;
+    const prevWs = prev != null && isWhitespace(prev);
+    if (prev != null && ((ws && prevWs) || (!ws && !isWordLike && !prevWs))) {
+      tokens[tokens.length - 1] += segment;
+    } else {
+      tokens.push(segment);
+    }
   }
+  return tokens;
+}
+
+// Content a screen-reader-only copy can't stand in for: hiding the animated
+// spans would hide these from assistive tech, so such content is left as is.
+const INTERACTIVE =
+  'a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]';
+
+class BlinkWc extends HTMLElement {
+  static observedAttributes = [
+    'rate',
+    'behavior',
+    'min-opacity',
+    'count',
+    'steps',
+    'step-durations',
+    'step-by',
+    'play-state',
+    'pause-on-hover',
+    'reduced-motion',
+    'mode',
+    'unit',
+  ];
 
   // ── Functional core: pure getters ──────────────────────────────────────
   get rate() {
@@ -211,6 +249,11 @@ class BlinkWc extends HTMLElement {
     this._dispatch('blink-start');
   }
 
+  // Moved with Node.moveBefore(): the browser skips disconnected/connected and
+  // keeps animation state, so there is nothing to tear down or rebuild. (Where
+  // moveBefore() is unsupported, a move falls back to the reconnect path above.)
+  connectedMoveCallback() {}
+
   disconnectedCallback() {
     unwatchMotion(this);
     this._intersectionObserver?.disconnect();
@@ -260,6 +303,7 @@ class BlinkWc extends HTMLElement {
     this._content = content;
     // Snapshot the authored markup so we can re-render when `mode` changes.
     this._sourceHTML = content.innerHTML;
+    this._sourceText = content.textContent.replace(/\s+/g, ' ').trim();
     this._renderContent();
   }
 
@@ -276,6 +320,27 @@ class BlinkWc extends HTMLElement {
     } else {
       delete this.dataset.split;
     }
+    this._syncSpeech();
+  }
+
+  // Per-unit spans make screen readers spell the text out letter by letter (and
+  // decode would expose its scrambled glyphs). When split, hide the animated
+  // spans and expose one visually-hidden copy of the original text instead.
+  _syncSpeech() {
+    const split = this.hasAttribute('data-split');
+    const interactive = split && this._content.querySelector(INTERACTIVE);
+    if (split && !interactive) {
+      if (!this._speech) {
+        this._speech = document.createElement('span');
+        this._speech.className = 'blink-sr';
+      }
+      this._speech.textContent = this._sourceText;
+      this._content.setAttribute('aria-hidden', 'true');
+      if (!this._speech.isConnected) this._content.after(this._speech);
+    } else {
+      this._content.removeAttribute('aria-hidden');
+      this._speech?.remove();
+    }
   }
 
   // Wrap each unit in a <span class="blink-char"> with a stagger index, so CSS
@@ -289,14 +354,16 @@ class BlinkWc extends HTMLElement {
     // Per-unit randomized clocks: each unit blinks on its own timer.
     const twinkle = this.mode === 'twinkle' || this.mode === 'sparkle';
     const decode = this.mode === 'decode';
-    const isWs = (c) => c.trim() === '';
+    const locale = this.closest('[lang]')?.lang || undefined;
     let i = 0;
     for (const node of textNodes) {
       const frag = document.createDocumentFragment();
-      const tokens = byWord ? this._tokenizeWords(node.textContent) : [...node.textContent];
+      const tokens = byWord
+        ? splitWords(node.textContent, locale)
+        : splitGraphemes(node.textContent, locale);
       for (const ch of tokens) {
         if (ch === '') continue;
-        const space = isWs(ch);
+        const space = isWhitespace(ch);
         const span = document.createElement('span');
         span.className = 'blink-char';
         span.style.setProperty('--i', i++);
@@ -317,24 +384,6 @@ class BlinkWc extends HTMLElement {
       node.replaceWith(frag);
     }
     this._content.style.setProperty('--n', i);
-  }
-
-  // Split text into word and whitespace-run tokens (no regex escapes needed).
-  _tokenizeWords(text) {
-    const tokens = [];
-    let buf = '';
-    let bufWs = null;
-    for (const c of text) {
-      const ws = c.trim() === '';
-      if (buf !== '' && ws !== bufWs) {
-        tokens.push(buf);
-        buf = '';
-      }
-      buf += c;
-      bufWs = ws;
-    }
-    if (buf !== '') tokens.push(buf);
-    return tokens;
   }
 
   // Whether motion should be suppressed: OS preference or VB's data-motion-reduced,

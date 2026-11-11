@@ -444,3 +444,70 @@ test.describe('Vanilla Breeze integration', () => {
     expect(lit).toEqual(['false', 'true']);
   });
 });
+
+test.describe('Screen readers and text segmentation', () => {
+  const add = (page, html) =>
+    page.evaluate((h) => {
+      const wrap = document.createElement('div');
+      wrap.innerHTML = h;
+      document.body.prepend(wrap);
+    }, html);
+
+  test('split modes read as whole text, not letter by letter', async ({ page }) => {
+    await expect(page.locator('#wave')).toMatchAriaSnapshot('- text: catch the wave');
+    await expect(page.locator('#decode')).toMatchAriaSnapshot('- text: DECODE ME');
+    await expect(page.locator('#wave .blink-content')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  test('switching to a non-split mode removes the screen-reader copy', async ({ page }) => {
+    await page.evaluate(() => document.getElementById('wave').setAttribute('mode', 'neon'));
+    await expect(page.locator('#wave .blink-sr')).toHaveCount(0);
+    await expect(page.locator('#wave .blink-content')).not.toHaveAttribute('aria-hidden');
+    await expect(page.locator('#wave')).toMatchAriaSnapshot('- text: catch the wave');
+  });
+
+  test('split content with a link stays exposed as authored', async ({ page }) => {
+    await add(page, '<blink-wc id="linked" mode="wave"><a href="#x">go</a> now</blink-wc>');
+    await expect(page.locator('#linked .blink-sr')).toHaveCount(0);
+    await expect(page.locator('#linked .blink-content')).not.toHaveAttribute('aria-hidden');
+    await expect(page.locator('#linked a')).toBeVisible();
+  });
+
+  test('decorative cursor and morse caption are not announced', async ({ page }) => {
+    await expect(page.locator('#terminal')).toMatchAriaSnapshot('- text: $ ls');
+    await expect(page.locator('#morse')).toMatchAriaSnapshot('- text: SOS');
+  });
+
+  test('letter split keeps emoji sequences and accents whole', async ({ page }) => {
+    await add(page, '<blink-wc id="emo" mode="wave">👩‍💻 café 🇺🇸</blink-wc>');
+    const units = await page.evaluate(() =>
+      [...document.querySelectorAll('#emo .blink-char:not(.blink-space)')].map((s) => s.textContent)
+    );
+    expect(units).toEqual(['👩‍💻', 'c', 'a', 'f', 'é', '🇺🇸']);
+  });
+
+  test('word split keeps punctuation with its word', async ({ page }) => {
+    await add(page, '<blink-wc id="words" mode="wave" unit="word">hello, big world!</blink-wc>');
+    const units = await page.evaluate(() =>
+      [...document.querySelectorAll('#words .blink-char')].map((s) => s.textContent)
+    );
+    expect(units).toEqual(['hello,', ' ', 'big', ' ', 'world!']);
+  });
+
+  test('moveBefore() keeps the element running without a rebuild', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const el = document.getElementById('extrude');
+      if (!('moveBefore' in Element.prototype)) return 'unsupported';
+      let reobserved = 0;
+      const orig = el._observe;
+      el._observe = function () {
+        reobserved++;
+        return orig.call(this);
+      };
+      el.parentNode.moveBefore(el, el.nextSibling);
+      return { reobserved, stepping: el.hasAttribute('data-stepping') };
+    });
+    test.skip(result === 'unsupported', 'moveBefore() not supported in this browser');
+    expect(result).toEqual({ reobserved: 0, stepping: true });
+  });
+});
