@@ -4,6 +4,15 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] — 2026-11-11
+
+### Fixed
+
+- **The terminal cursor and typewriter caret ignored pausing.** They are
+  `::after` pseudo-elements, which the pause rules' `:is()` lists cannot match,
+  so `play-state="paused"`, `stop()`, off-screen, hidden-tab and
+  `pause-on-hover` left them blinking. They now pause with the text.
+
 ## [1.5.1] — 2026-11-11
 
 ### Fixed
