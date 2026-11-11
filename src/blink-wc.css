@@ -129,12 +129,18 @@
 
   /* !important: the per-behavior `animation` shorthand resets play-state to
      running, so the pause overrides must beat it regardless of specificity. */
+  /* .blink-content::after is the terminal cursor / typewriter caret. It needs
+     its own selector: :is() cannot match pseudo-elements. */
   blink-wc[data-state='paused'] :is(.blink-content, .blink-char),
+  blink-wc[data-state='paused'] .blink-content::after,
   blink-wc[data-visible='false'] :is(.blink-content, .blink-char),
-  blink-wc[data-tab-visible='false'] :is(.blink-content, .blink-char) {
+  blink-wc[data-visible='false'] .blink-content::after,
+  blink-wc[data-tab-visible='false'] :is(.blink-content, .blink-char),
+  blink-wc[data-tab-visible='false'] .blink-content::after {
     animation-play-state: paused !important;
   }
-  blink-wc[pause-on-hover]:where(:hover, :focus-within) :is(.blink-content, .blink-char) {
+  blink-wc[pause-on-hover]:where(:hover, :focus-within) :is(.blink-content, .blink-char),
+  blink-wc[pause-on-hover]:where(:hover, :focus-within) .blink-content::after {
     animation-play-state: paused !important;
   }
   blink-wc[pause-on-hover] {

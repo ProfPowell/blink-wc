@@ -511,3 +511,50 @@ test.describe('Screen readers and text segmentation', () => {
     expect(result).toEqual({ reobserved: 0, stepping: true });
   });
 });
+
+test.describe('Caret pausing', () => {
+  const caretState = (page, id) =>
+    page.evaluate(
+      (i) =>
+        getComputedStyle(document.querySelector(`#${i} .blink-content`), '::after')
+          .animationPlayState,
+      id
+    );
+
+  test('play-state="paused" also pauses the terminal cursor', async ({ page }) => {
+    // Bring it on-screen first, or it is (correctly) paused as off-screen.
+    await page.locator('#terminal').scrollIntoViewIfNeeded();
+    await expect(page.locator('#terminal')).toHaveAttribute('data-visible', 'true');
+    expect(await caretState(page, 'terminal')).toBe('running');
+    await page.evaluate(() => document.getElementById('terminal').stop());
+    expect(await caretState(page, 'terminal')).toBe('paused');
+    await page.evaluate(() => document.getElementById('terminal').start());
+    expect(await caretState(page, 'terminal')).toBe('running');
+  });
+
+  test('the typewriter caret pauses off-screen, in a hidden tab, and on hover', async ({
+    page,
+  }) => {
+    await page.evaluate(() =>
+      document.body.insertAdjacentHTML(
+        'afterbegin',
+        '<blink-wc id="tw" mode="typewriter" pause-on-hover>typed</blink-wc>'
+      )
+    );
+    const tw = page.locator('#tw');
+    await expect(tw).toHaveAttribute('data-visible', 'true');
+    expect(await caretState(page, 'tw')).toBe('running');
+    // The component sets these from IntersectionObserver / Page Visibility.
+    await page.evaluate(() => (document.getElementById('tw').dataset.visible = 'false'));
+    expect(await caretState(page, 'tw')).toBe('paused');
+    await page.evaluate(() => {
+      const el = document.getElementById('tw');
+      el.dataset.visible = 'true';
+      el.dataset.tabVisible = 'false';
+    });
+    expect(await caretState(page, 'tw')).toBe('paused');
+    await page.evaluate(() => (document.getElementById('tw').dataset.tabVisible = 'true'));
+    await tw.hover();
+    expect(await caretState(page, 'tw')).toBe('paused');
+  });
+});
