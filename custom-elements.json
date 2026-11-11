@@ -63,6 +63,10 @@
             },
             {
               "kind": "method",
+              "name": "connectedMoveCallback"
+            },
+            {
+              "kind": "method",
               "name": "start"
             },
             {
@@ -87,20 +91,15 @@
             },
             {
               "kind": "method",
+              "name": "_syncSpeech"
+            },
+            {
+              "kind": "method",
               "name": "_splitLetters",
               "parameters": [
                 {
                   "name": "byWord",
                   "default": "this.unit === 'word'"
-                }
-              ]
-            },
-            {
-              "kind": "method",
-              "name": "_tokenizeWords",
-              "parameters": [
-                {
-                  "name": "text"
                 }
               ]
             },

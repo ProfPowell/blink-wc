@@ -4,6 +4,30 @@ All notable changes to this project are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] — 2026-11-11
+
+### Fixed
+
+- **Screen readers spelled split text out letter by letter.** All per-letter
+  and per-word modes (and `step-by="letter"`/`"word"`) now hide the animated
+  spans with `aria-hidden` and expose one visually hidden copy of the text, so
+  `wave` reads "catch the wave", not "c a t c h…", and `decode` never exposes
+  its scrambled glyphs. Content containing links or other interactive elements
+  is left as authored.
+- **Decorative glyphs were announced.** The terminal cursor, typewriter caret
+  and morse dot/dash caption now use CSS empty alt text (`content: '▋' / ''`).
+- **Emoji and accented characters were split apart.** Letter mode now splits by
+  grapheme cluster with `Intl.Segmenter`, so 👩‍💻, flags and combining accents
+  stay whole. Word mode uses the locale's word boundaries (from the nearest
+  `lang`), which also handles languages written without spaces.
+
+### Changed
+
+- `connectedMoveCallback` is defined, so moving an element with
+  `Node.moveBefore()` keeps its animation running without a rebuild.
+- `observedAttributes` is now a static class field.
+- Locally installed agent skills (`.agents/`, `.claude/skills/`) are git-ignored.
+
 ## [1.5.0] — 2026-11-03
 
 Brings `<blink-wc>` in line with current Vanilla Breeze (0.5.x) theming.

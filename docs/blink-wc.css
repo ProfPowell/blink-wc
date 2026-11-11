@@ -50,6 +50,16 @@
     display: inline-block;
   }
 
+  /* Screen-reader copy of split text (the animated spans are aria-hidden). */
+  blink-wc .blink-sr {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
   /* ─── Keyframes ──────────────────────────────────────────────────────── */
 
   /* blink — the classic: hard on/off, no easing */
@@ -248,7 +258,7 @@
     animation: none;
   }
   blink-wc[mode='terminal'] .blink-content::after {
-    content: '▋';
+    content: '▋' / ''; /* decorative: not announced */
     margin-inline-start: 0.1em;
     color: var(--color-accent, var(--color-success, oklch(80% 0.2 145)));
     animation: blink-wc-blink var(--blink-rate, 1s) step-end infinite;
@@ -348,7 +358,7 @@
       0 0 0.8em currentColor;
   }
   blink-wc[mode='morse']::after {
-    content: attr(data-morse);
+    content: attr(data-morse) / ''; /* duplicates the text: not announced */
     display: block;
     margin-block-start: 0.4rem;
     font-size: 0.75em;
@@ -474,7 +484,7 @@
     }
   }
   blink-wc[mode='typewriter'] .blink-content::after {
-    content: '▋';
+    content: '▋' / ''; /* decorative: not announced */
     margin-inline-start: 0.05em;
     color: var(--color-accent, currentColor);
     animation: blink-wc-blink var(--blink-rate, 1s) step-end infinite;

@@ -289,6 +289,12 @@ Relies on CSS relative colour syntax and `light-dark()` (Baseline 2024).
   `:root[data-motion-reduced]` — halts all animation (including the terminal and
   typewriter carets) and shows the text fully, unless you explicitly set
   `reduced-motion="ignore"`. Changes apply live.
+- Screen readers hear the text once, as written. Letter and word modes split
+  the text into animated spans, so those spans are hidden from assistive tech
+  and a visually hidden copy of the text is exposed instead (unless the content
+  holds links or other interactive elements, which are left as authored). The
+  terminal cursor, typewriter caret and morse dot/dash caption are decorative
+  and are not announced.
 - The blink pauses when off-screen and when the tab is hidden.
 - `pause-on-hover` also pauses on keyboard focus (`:focus-within`).
 - Avoid fast, large-area blinking, which can trigger photosensitive seizures
